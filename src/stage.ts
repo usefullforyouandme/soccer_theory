@@ -6,6 +6,8 @@ const PLAYER_R = 1.5;
 const BALL_R = 1.0;
 const BALL_GAP = PLAYER_R + BALL_R * 0.9; // 保持中のボールは選手の丸に隠れないよう少し離して描く
 const GHOST_MIN_DIST = 4; // 比較表示で「おてほんの位置」を出す最小のずれ(m)
+const BANNER = { x: 3, w: 44, h: 9 }; // 結末バナーの横位置・大きさ(縦位置は空いている所を探す)
+const GOAL_X = [22.5, 27.5] as const;
 const TOKEN = /\{([ha][1-9][0-9]?)\}/g;
 let stageSeq = 0;
 
@@ -23,9 +25,13 @@ type ArrowStyle = keyof typeof ARROW_COLORS;
 
 type Attrs = Record<string, string | number>;
 
+function setAttrs(e: Element, attrs: Attrs) {
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+}
+
 function svg<K extends keyof SVGElementTagNameMap>(tag: K, attrs: Attrs = {}, parent?: Element): SVGElementTagNameMap[K] {
   const e = document.createElementNS(NS, tag);
-  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+  setAttrs(e, attrs);
   parent?.appendChild(e);
   return e;
 }
@@ -47,6 +53,15 @@ const unit = (v: Point): Point => {
   return l < 1e-6 ? { x: 0, y: 0 } : { x: v.x / l, y: v.y / l };
 };
 const teamOf = (id: PlayerId) => (id.startsWith("h") ? "home" : "away");
+const show = (e: SVGElement, on: boolean) => (e.style.display = on ? "" : "none");
+/** ゴールに入ったか(ゴールラインの上で、ゴールの幅の内側) */
+const inGoal = (p: Point) => p.x >= GOAL_X[0] && p.x <= GOAL_X[1] && (p.y <= 0.5 || p.y >= 67.5);
+
+/** 1コマ分の状態(ステップ中に毎フレーム変わるもの) */
+interface Frame {
+  pos: Record<PlayerId, Point>;
+  e: number;
+}
 
 // ---------- 説明文の選手トークン({h7} → 色付きの「7番」。低学年向けは「7ばん」) ----------
 export const playerLabel = (id: PlayerId, grade: Grade) => `${id.slice(1)}${grade === "low" ? "ばん" : "番"}`;
@@ -69,8 +84,8 @@ export function renderRichText(s: string, parent: HTMLElement, grade: Grade) {
 
 export const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-/** ピッチ(8人制: 50m × 68m)と攻める方向の表示 */
-function drawField(g: SVGGElement, uid: string, mini: boolean) {
+/** ピッチ(8人制: 50m × 68m)と攻める方向の表示。ゴールの要素を [相手のゴール, 自分のゴール] で返す */
+function drawField(g: SVGGElement, uid: string, mini: boolean): SVGRectElement[] {
   for (let i = 0; i < 10; i++) {
     svg("rect", { x: 0, y: i * 6.8, width: 50, height: 6.8, class: i % 2 ? "turf-b" : "turf-a" }, g);
   }
@@ -79,13 +94,14 @@ function drawField(g: SVGGElement, uid: string, mini: boolean) {
   svg("line", { x1: 0, y1: 34, x2: 50, y2: 34, ...line }, g);
   svg("circle", { cx: 25, cy: 34, r: 7, ...line }, g);
   svg("circle", { cx: 25, cy: 34, r: 0.3, class: "spot" }, g);
+  const goals: SVGRectElement[] = [];
   for (const [y0, dir] of [[0, 1], [68, -1]] as const) {
     svg("rect", { x: 13, y: dir === 1 ? 0 : 56, width: 24, height: 12, ...line }, g);
     svg("rect", { x: 18.5, y: dir === 1 ? 0 : 64, width: 13, height: 4, ...line }, g);
     svg("circle", { cx: 25, cy: y0 + dir * 8, r: 0.3, class: "spot" }, g);
-    svg("rect", { x: 22.5, y: dir === 1 ? -1.4 : 68, width: 5, height: 1.4, class: "goal", fill: `url(#${uid}-net)` }, g);
+    goals.push(svg("rect", { x: GOAL_X[0], y: dir === 1 ? -1.4 : 68, width: 5, height: 1.4, class: "goal", fill: `url(#${uid}-net)` }, g));
   }
-  if (mini) return;
+  if (mini) return goals;
   // 攻める方向: 左の余白に大きな矢印、上下にゴールの名前
   svg("path", { d: "M-2.6,6 L-0.6,10.5 L-1.8,10.5 L-1.8,62 L-3.4,62 L-3.4,10.5 L-4.6,10.5 Z", class: "dir-arrow" }, g);
   const dirText = svg("text", { x: -2.6, y: 36, class: "dir-text", "text-anchor": "middle", "dominant-baseline": "central" }, g);
@@ -94,6 +110,7 @@ function drawField(g: SVGGElement, uid: string, mini: boolean) {
   top.textContent = "▲ 相手のゴール";
   const bottom = svg("text", { x: 25, y: 71.6, class: "goal-label", "text-anchor": "middle", "dominant-baseline": "central" }, g);
   bottom.textContent = "自分のゴール";
+  return goals;
 }
 
 export interface StageOptions {
@@ -115,7 +132,9 @@ export class Stage {
   private readonly ghostLayer: SVGGElement;
   private readonly overlayLayer: SVGGElement;
   private readonly labelLayer: SVGGElement;
+  private readonly fxLayer: SVGGElement;
   private readonly bannerLayer: SVGGElement;
+  private readonly goals: SVGRectElement[];
   private readonly players = new Map<PlayerId, { g: SVGGElement; ring: SVGCircleElement; nose: SVGGElement }>();
   private readonly ballG: SVGGElement;
   private readonly ballShadow: SVGEllipseElement;
@@ -123,6 +142,10 @@ export class Stage {
   private readonly captionText: HTMLElement;
   private readonly uid = `st${++stageSeq}`;
   private captionStep = -1;
+  /** ステップが変わったときだけオーバーレイ等を作り直し、フレームごとは座標だけ更新する */
+  private builtStep = -1;
+  private updaters: ((f: Frame) => void)[] = [];
+  private goalFx = false;
 
   constructor(scenario: Scenario, readonly key: VariantKey, opts: StageOptions = {}) {
     this.variant = scenario.variants[key];
@@ -142,7 +165,7 @@ export class Stage {
     this.el.appendChild(this.svgEl);
     this.defineDefs();
 
-    drawField(svg("g", {}, this.svgEl), this.uid, this.mini);
+    this.goals = drawField(svg("g", {}, this.svgEl), this.uid, this.mini);
     this.trailLayer = svg("g", { class: "trails" }, this.svgEl);
     this.ghostLayer = svg("g", { class: "ghosts" }, this.svgEl);
     this.overlayLayer = svg("g", { class: "overlays" }, this.svgEl);
@@ -165,6 +188,7 @@ export class Stage {
     svg("circle", { r: BALL_R, class: "ball-body" }, this.ballG);
     svg("path", { d: "M0,-0.45 L0.43,-0.14 L0.27,0.36 L-0.27,0.36 L-0.43,-0.14 Z", class: "ball-patch" }, this.ballG);
     this.labelLayer = svg("g", { class: "labels" }, this.svgEl); // ラベル・吹き出しは選手より手前
+    this.fxLayer = svg("g", { class: "goal-fx" }, this.svgEl);
     this.bannerLayer = svg("g", { class: "banner" }, this.svgEl);
 
     const caption = html("div", "caption", this.mini ? undefined : this.el);
@@ -206,10 +230,16 @@ export class Stage {
       nose.setAttribute("transform", `rotate(${deg.toFixed(1)})`);
     }
 
-    this.drawTrails(i, focus, pos);
-    this.drawGhosts(i, e, pos);
-    this.drawOverlays(i, cur, prev, pos, i === 0 ? 1 : clamp01(t / 0.2));
-    this.drawBanner(i === steps.length - 1 && t >= 1, cur.ball.y);
+    if (this.builtStep !== i) this.buildStep(i, cur, prev, focus);
+    const frame: Frame = { pos, e };
+    for (const update of this.updaters) update(frame);
+    const opacity = String(i === 0 ? 1 : clamp01(t / 0.2));
+    this.overlayLayer.style.opacity = opacity;
+    this.labelLayer.style.opacity = opacity;
+
+    const scored = i > 0 && cur.ball.motion === "shot" && inGoal(cur.ball) && this.ballProgress(cur.ball, t, e) >= 1;
+    this.drawGoalFx(scored ? cur.ball : null);
+    this.drawBanner(i === steps.length - 1 && t >= 1, pos, b, cur.ball.owner, focus, scored);
   }
 
   /** 読み上げ用の文 */
@@ -270,45 +300,61 @@ export class Stage {
     return { x: 0, y: teamOf(owner) === "home" ? -1 : 1 }; // 相手ゴールの方向
   }
 
+  /** ステップの始めに、そのステップで使う足あと・ゴースト・オーバーレイの要素を作る */
+  private buildStep(i: number, cur: Step, prev: Step, focus: Set<PlayerId>) {
+    this.builtStep = i;
+    this.updaters = [];
+    for (const layer of [this.trailLayer, this.ghostLayer, this.overlayLayer, this.labelLayer]) layer.replaceChildren();
+    this.buildTrails(i, focus);
+    this.buildGhosts(i);
+    this.buildOverlays(i, cur, prev);
+  }
+
   // ---------- 足あと・ゴースト ----------
   /** 強調している選手の、これまでの動きを薄い線で残す */
-  private drawTrails(i: number, focus: Set<PlayerId>, pos: Record<PlayerId, Point>) {
-    this.trailLayer.replaceChildren();
+  private buildTrails(i: number, focus: Set<PlayerId>) {
     if (this.mini || i === 0) return;
     for (const id of focus) {
-      const pts = [...this.variant.steps.slice(0, i).map((s) => s.players[id]), pos[id]];
+      const past = this.variant.steps.slice(0, i).map((s) => s.players[id]);
+      const pts = [...past, this.variant.steps[i].players[id]];
       let len = 0;
       for (let k = 1; k < pts.length; k++) len += dist(pts[k - 1], pts[k]);
       if (len < 1.5) continue;
-      svg("polyline", { points: pts.map((p) => `${p.x},${p.y}`).join(" "), class: `trail ${teamOf(id)}` }, this.trailLayer);
-      for (const p of pts.slice(0, -1)) svg("circle", { cx: p.x, cy: p.y, r: 0.35, class: `trail-dot ${teamOf(id)}` }, this.trailLayer);
+      const line = svg("polyline", { class: `trail ${teamOf(id)}` }, this.trailLayer);
+      for (const p of past) svg("circle", { cx: p.x, cy: p.y, r: 0.35, class: `trail-dot ${teamOf(id)}` }, this.trailLayer);
+      const fixed = past.map((p) => `${p.x},${p.y}`).join(" ");
+      this.updaters.push(({ pos }) => line.setAttribute("points", `${fixed} ${pos[id].x},${pos[id].y}`));
     }
   }
 
   /** 比較表示: おてほんと大きく違う味方の「本当はここ」を薄い丸で重ねる */
-  private drawGhosts(i: number, e: number, pos: Record<PlayerId, Point>) {
-    this.ghostLayer.replaceChildren();
+  private buildGhosts(i: number) {
     if (!this.ghost) return;
     const gcur = this.ghost.steps[i];
     const gprev = i > 0 ? this.ghost.steps[i - 1] : gcur;
     for (const id of this.players.keys()) {
       if (teamOf(id) !== "home") continue;
-      const g = lerp(gprev.players[id], gcur.players[id], e);
-      if (dist(g, pos[id]) < GHOST_MIN_DIST) continue;
-      svg("line", { x1: pos[id].x, y1: pos[id].y, x2: g.x, y2: g.y, class: "ghost-link" }, this.ghostLayer);
-      svg("circle", { cx: g.x, cy: g.y, r: PLAYER_R, class: "ghost" }, this.ghostLayer);
-      const n = svg("text", { x: g.x, y: g.y, class: "ghost-num", "text-anchor": "middle", "dominant-baseline": "central" }, this.ghostLayer);
-      n.textContent = id.slice(1);
+      const group = svg("g", {}, this.ghostLayer);
+      const link = svg("line", { class: "ghost-link" }, group);
+      const circle = svg("circle", { r: PLAYER_R, class: "ghost" }, group);
+      const num = svg("text", { class: "ghost-num", "text-anchor": "middle", "dominant-baseline": "central" }, group);
+      num.textContent = id.slice(1);
+      this.updaters.push(({ pos, e }) => {
+        const g = lerp(gprev.players[id], gcur.players[id], e);
+        const p = pos[id];
+        const on = dist(g, p) >= GHOST_MIN_DIST;
+        show(group, on);
+        if (!on) return;
+        setAttrs(link, { x1: p.x, y1: p.y, x2: g.x, y2: g.y });
+        setAttrs(circle, { cx: g.x, cy: g.y });
+        setAttrs(num, { x: g.x, y: g.y });
+      });
     }
   }
 
   // ---------- オーバーレイ ----------
-  private drawOverlays(i: number, cur: Step, prev: Step, pos: Record<PlayerId, Point>, opacity: number) {
+  private buildOverlays(i: number, cur: Step, prev: Step) {
     const layer = this.overlayLayer;
-    layer.replaceChildren();
-    this.labelLayer.replaceChildren();
-    layer.style.opacity = String(opacity);
-    this.labelLayer.style.opacity = String(opacity);
     // 面 → 線 → 矢印 → 吹き出し の順に重ねる
     const order: Overlay["type"][] = ["space", "triangle", "passLane", "arrow", "callout"];
     const sorted = [...cur.overlays].sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
@@ -319,22 +365,26 @@ export class Stage {
           if (o.label && !this.mini) this.label(o.label, o.x, o.y); // スペースは空いている場所なので中心に置く
           break;
         case "triangle": {
-          const pts = o.players.map((id) => `${pos[id].x},${pos[id].y}`).join(" ");
-          svg("polygon", { points: pts, class: "ov-triangle" }, layer);
+          const poly = svg("polygon", { class: "ov-triangle" }, layer);
+          this.updaters.push(({ pos }) => poly.setAttribute("points", o.players.map((id) => `${pos[id].x},${pos[id].y}`).join(" ")));
           break;
         }
         case "passLane": {
-          const a = pos[o.from];
-          const b = pos[o.to];
-          svg("line", { x1: a.x, y1: a.y, x2: b.x, y2: b.y, class: `ov-lane ${o.state}` }, layer);
-          if (o.state === "blocked") this.label("×", (a.x + b.x) / 2, (a.y + b.y) / 2, "ov-blocked");
+          const line = svg("line", { class: `ov-lane ${o.state}` }, layer);
+          const mark = o.state === "blocked" ? this.label("×", 0, 0, "ov-blocked") : null;
+          this.updaters.push(({ pos }) => {
+            const a = pos[o.from];
+            const b = pos[o.to];
+            setAttrs(line, { x1: a.x, y1: a.y, x2: b.x, y2: b.y });
+            if (mark) setAttrs(mark, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
+          });
           break;
         }
         case "arrow":
-          if (i > 0) this.drawArrow(o, prev, cur);
+          if (i > 0) this.drawArrow(o, prev, cur); // 前ステップ → 現ステップの動きなので、ステップ中は変わらない
           break;
         case "callout":
-          if (!this.mini) this.drawCallout(pos[o.player], o.text, o.tone);
+          if (!this.mini) this.buildCallout(o.player, o.text, o.tone);
           break;
       }
     }
@@ -367,29 +417,67 @@ export class Stage {
     if (o.judgement === "bad") this.label("×", from.x + dx * 0.5, from.y + dy * 0.5, "ov-bad-mark");
   }
 
-  /** 選手の頭上の吹き出し。ピッチの外にはみ出さないよう位置を調整 */
-  private drawCallout(p: Point, text: string, tone: "good" | "bad") {
+  /** 選手の頭上の吹き出し。選手について動き、ピッチの外にはみ出さないよう位置を調整 */
+  private buildCallout(player: PlayerId, text: string, tone: "good" | "bad") {
     const w = [...text].length * 1.75 + 1.6;
     const h = 2.9;
-    const above = p.y > 6; // 上端の近くでは下に出す
-    const cy = above ? p.y - PLAYER_R - 0.9 - h / 2 : p.y + PLAYER_R + 0.9 + h / 2;
-    const cx = Math.min(50 - w / 2, Math.max(w / 2, p.x));
     const g = svg("g", { class: `callout ${tone}` }, this.labelLayer);
-    const tipY = above ? cy + h / 2 : cy - h / 2;
-    const tipTo = above ? p.y - PLAYER_R - 0.1 : p.y + PLAYER_R + 0.1;
-    svg("path", { d: `M${p.x - 0.7},${tipY} L${p.x},${tipTo} L${p.x + 0.7},${tipY} Z`, class: "callout-tip" }, g);
-    svg("rect", { x: cx - w / 2, y: cy - h / 2, width: w, height: h, rx: 1.2, class: "callout-bg" }, g);
-    const t = svg("text", { x: cx, y: cy, class: "callout-text", "text-anchor": "middle", "dominant-baseline": "central" }, g);
+    const tip = svg("path", { class: "callout-tip" }, g);
+    const bg = svg("rect", { width: w, height: h, rx: 1.2, class: "callout-bg" }, g);
+    const t = svg("text", { class: "callout-text", "text-anchor": "middle", "dominant-baseline": "central" }, g);
     t.textContent = `${tone === "good" ? "◎" : "×"} ${text}`;
+    this.updaters.push(({ pos }) => {
+      const p = pos[player];
+      const above = p.y > 6; // 上端の近くでは下に出す
+      const cy = above ? p.y - PLAYER_R - 0.9 - h / 2 : p.y + PLAYER_R + 0.9 + h / 2;
+      const cx = Math.min(50 - w / 2, Math.max(w / 2, p.x));
+      const tipY = above ? cy + h / 2 : cy - h / 2;
+      const tipTo = above ? p.y - PLAYER_R - 0.1 : p.y + PLAYER_R + 0.1;
+      tip.setAttribute("d", `M${p.x - 0.7},${tipY} L${p.x},${tipTo} L${p.x + 0.7},${tipY} Z`);
+      setAttrs(bg, { x: cx - w / 2, y: cy - h / 2 });
+      setAttrs(t, { x: cx, y: cy });
+    });
   }
 
   private label(text: string, x: number, y: number, className = "ov-label") {
     const t = svg("text", { x, y, class: className, "text-anchor": "middle", "dominant-baseline": "central" }, this.labelLayer);
     t.textContent = text;
+    return t;
   }
 
-  /** 結末バナー。ボールのある側(プレーの決着点)を隠さないよう反対側に出す */
-  private drawBanner(visible: boolean, ballY: number) {
+  // ---------- ゴールの演出・結末バナー ----------
+  /** ボールがゴールに入った瞬間に、ネットの揺れ・波紋・紙ふぶきを出す */
+  private drawGoalFx(ball: Point | null) {
+    if (this.mini || !!ball === this.goalFx) return;
+    this.goalFx = !!ball;
+    this.fxLayer.replaceChildren();
+    for (const goal of this.goals) goal.classList.remove("scored");
+    if (!ball) return;
+    const top = ball.y < 34;
+    this.goals[top ? 0 : 1].classList.add("scored");
+    const y = top ? 0 : 68;
+    const out = top ? -1 : 1; // ゴールの外側(ピッチの外)の向き
+    for (const delay of [0, 0.25]) {
+      const ring = svg("circle", { cx: ball.x, cy: y, r: 1.2, class: "fx-ripple" }, this.fxLayer);
+      ring.style.animationDelay = `${delay}s`;
+    }
+    const colors = ["#ffd400", "#ff8a00", "#ffffff", "#1e5bd8", "#3ec46d"];
+    for (let k = 0; k < 16; k++) {
+      const angle = (Math.PI * (k + 0.5)) / 16; // ピッチの内側へ半円状に広げる
+      const r = 4 + (k % 3) * 1.6;
+      const piece = svg("rect", { x: ball.x - 0.35, y: y - 0.2, width: 0.7, height: 0.4, class: "fx-confetti", fill: colors[k % colors.length] }, this.fxLayer);
+      piece.style.setProperty("--dx", `${Math.cos(angle) * r}px`);
+      piece.style.setProperty("--dy", `${-out * Math.sin(angle) * r}px`);
+      piece.style.setProperty("--rot", `${(k % 2 ? 1 : -1) * (180 + k * 25)}deg`);
+      piece.style.animationDelay = `${(k % 4) * 0.04}s`;
+    }
+  }
+
+  /**
+   * 結末バナー。選手・ボール・ボールから攻めるゴールまでのコース(決着点)をなるべく隠さない高さに出す。
+   * ゴールが決まったときは、ボールが入る瞬間を見せてから少し遅れて出す。
+   */
+  private drawBanner(visible: boolean, pos: Record<PlayerId, Point>, ball: Point, owner: PlayerId | null, focus: Set<PlayerId>, delayed: boolean) {
     const layer = this.bannerLayer;
     if (!visible || this.mini) {
       layer.replaceChildren();
@@ -397,14 +485,40 @@ export class Stage {
     }
     if (layer.childElementCount) return;
     const good = this.key === "good";
-    const top = ballY < 34 ? 40 : 6;
-    svg("rect", { x: 3, y: top, width: 44, height: 12, rx: 2.5, class: `banner-bg ${this.key}` }, layer);
-    const sub = svg("text", { x: 25, y: top + 3.2, class: "banner-sub", "text-anchor": "middle", "dominant-baseline": "central" }, layer);
+    const top = this.bannerTop(pos, ball, owner, focus);
+    layer.classList.toggle("delayed", delayed);
+    svg("rect", { x: BANNER.x, y: top, width: BANNER.w, height: BANNER.h, rx: 2.2, class: `banner-bg ${this.key}` }, layer);
+    const sub = svg("text", { x: 25, y: top + 2.5, class: "banner-sub", "text-anchor": "middle", "dominant-baseline": "central" }, layer);
     sub.textContent = good ? "◎ チャンス!" : "× ピンチ!";
     const text = this.variant.outcomeBanner;
-    const main = svg("text", { x: 25, y: top + 8, class: "banner-main", "text-anchor": "middle", "dominant-baseline": "central" }, layer);
-    main.style.fontSize = String(Math.min(4, 40 / text.length));
+    const main = svg("text", { x: 25, y: top + 6.3, class: "banner-main", "text-anchor": "middle", "dominant-baseline": "central" }, layer);
+    main.style.fontSize = String(Math.min(3.6, 38 / [...text].length));
     main.textContent = text;
+  }
+
+  /** バナーの上端 Y。隠してしまう量が最も少ない高さを選び、同じならボールから遠い方にする */
+  private bannerTop(pos: Record<PlayerId, Point>, ball: Point, owner: PlayerId | null, focus: Set<PlayerId>) {
+    const obstacles: { p: Point; r: number; w: number }[] = [];
+    for (const [id, p] of Object.entries(pos)) obstacles.push({ p, r: PLAYER_R + 0.3, w: focus.has(id) ? 3 : 1 });
+    obstacles.push({ p: ball, r: BALL_R + 0.3, w: 3 });
+    if (owner) {
+      // ボールを持っている選手が攻めるゴールまでのコース(ここで勝負が決まる)
+      const goal = { x: 25, y: teamOf(owner) === "home" ? 0 : 68 };
+      const n = Math.ceil(dist(ball, goal) / 2);
+      for (let k = 1; k <= n; k++) obstacles.push({ p: lerp(ball, goal, k / n), r: 1.5, w: 2 });
+    }
+    let best = { top: 0.5, cost: Infinity, far: -1 };
+    for (let top = 0.5; top <= 68 - BANNER.h - 0.5; top += 0.25) {
+      let cost = 0;
+      for (const { p, r, w } of obstacles) {
+        const dx = Math.max(BANNER.x - p.x, 0, p.x - (BANNER.x + BANNER.w));
+        const dy = Math.max(top - p.y, 0, p.y - (top + BANNER.h));
+        cost += Math.max(0, r - Math.hypot(dx, dy)) * w;
+      }
+      const far = Math.abs(top + BANNER.h / 2 - ball.y);
+      if (cost < best.cost - 1e-6 || (cost < best.cost + 1e-6 && far > best.far)) best = { top, cost, far };
+    }
+    return best.top;
   }
 
   private defineDefs() {
