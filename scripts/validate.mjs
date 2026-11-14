@@ -75,6 +75,7 @@ function checkLogic(s, file) {
     if (long && [...r].length > textLimit) warn(where, `対象学年には長すぎます(${[...r].length}字 > ${textLimit}字): "${r}"`);
   };
   checkText("title", s.title);
+  checkText("pattern", s.pattern);
   checkText("question", s.question, { long: true });
   checkText("keyPoint", s.keyPoint, { long: true });
   for (const side of ["home", "away"]) checkText(`teams.${side}.name`, s.teams[side].name);
@@ -226,11 +227,32 @@ function checkLogic(s, file) {
   return { errors, warnings };
 }
 
+/** 同じテーマ(group)のシナリオ同士で、タイトル・種類・パターン名がそろっているか */
+function checkGroups(list) {
+  const problems = [];
+  const byGroup = new Map();
+  for (const { file, data } of list) {
+    if (!byGroup.has(data.group)) byGroup.set(data.group, []);
+    byGroup.get(data.group).push({ file, data });
+  }
+  for (const [group, items] of byGroup) {
+    const first = items[0].data;
+    for (const { file, data } of items.slice(1)) {
+      if (data.title !== first.title) problems.push(`${basename(file)}: group "${group}" のタイトルが ${basename(items[0].file)} と違います`);
+      if (data.category !== first.category) problems.push(`${basename(file)}: group "${group}" の category が ${basename(items[0].file)} と違います`);
+    }
+    const patterns = items.map((x) => x.data.pattern);
+    if (new Set(patterns).size !== patterns.length) problems.push(`group "${group}" に同じパターン名があります`);
+  }
+  return problems;
+}
+
 const files = process.argv.length > 2
   ? process.argv.slice(2)
   : readdirSync(join(ROOT, "scenarios")).filter((f) => f.endsWith(".json")).map((f) => join(ROOT, "scenarios", f));
 
 let failed = false;
+const valid = [];
 for (const file of files) {
   let data;
   try {
@@ -251,5 +273,10 @@ for (const file of files) {
   for (const e of errors) console.error(`  ERROR ${e}`);
   for (const w of warnings) console.warn(`  WARN  ${w}`);
   if (errors.length) failed = true;
+  else valid.push({ file, data });
+}
+for (const p of checkGroups(valid)) {
+  console.error(`  ERROR ${p}`);
+  failed = true;
 }
 process.exit(failed ? 1 : 0);

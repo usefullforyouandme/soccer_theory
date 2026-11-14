@@ -8,6 +8,8 @@ export type Grade = "low" | "middle" | "high";
 /** 結末の種類: チャンス(緑)/ ピンチ(赤)/ 残念(灰。チャンスを逃した・相手ボールになった) */
 export type OutcomeTone = "chance" | "pinch" | "miss";
 export type GoalSide = "home" | "away";
+/** 種類: ボールを前へ運ぶ / ゴールをねらう / ボールを取る・守る / 切りかえ / リスタート・キーパー */
+export type Category = "build" | "attack" | "defend" | "transition" | "restart";
 
 export interface Point {
   x: number;
@@ -126,7 +128,13 @@ export interface Drill {
 export interface Scenario {
   schemaVersion: 2;
   id: string;
+  /** テーマ名(同じテーマの別パターンは同じタイトル) */
   title: string;
+  category: Category;
+  /** テーマのID。同じテーマの別パターンは同じ値 */
+  group: string;
+  /** パターン名(ボールの位置・守備の状況の違い) */
+  pattern: string;
   theme: string;
   coachNote?: string;
   /** 指導者がピッチで子どもに掛ける短い言葉(指導者向け欄に表示) */

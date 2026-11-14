@@ -9,6 +9,9 @@
     "schemaVersion",
     "id",
     "title",
+    "category",
+    "group",
+    "pattern",
     "theme",
     "targetGrade",
     "question",
@@ -26,10 +29,31 @@
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
     },
     "title": {
-      "description": "子ども向けタイトル(対象学年に合わせた表記)",
+      "description": "テーマ名(同じテーマの別パターンは同じタイトルにする)",
       "type": "string",
       "minLength": 1,
       "maxLength": 20
+    },
+    "category": {
+      "description": "種類。build=ボールを前へ運ぶ、attack=ゴールをねらう、defend=ボールを取る・守る、transition=切りかえ、restart=リスタート・キーパー",
+      "enum": [
+        "build",
+        "attack",
+        "defend",
+        "transition",
+        "restart"
+      ]
+    },
+    "group": {
+      "description": "テーマのID(同じテーマの別パターンは同じ値にする)。例: counter-press",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "pattern": {
+      "description": "パターン名(ボールの位置・守備の状況の違い)。一覧と画面の見出しに表示。例: サイドで取られた時",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 16
     },
     "theme": {
       "description": "指導者向けのテーマ説明(漢字可)",

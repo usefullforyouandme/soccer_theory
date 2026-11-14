@@ -1,10 +1,21 @@
 import "./style.css";
 import { plainText, prefersReducedMotion, renderRichText, Stage } from "./stage";
-import type { Scenario, VariantKey } from "./types";
+import type { Category, Scenario, VariantKey } from "./types";
 
 // scenarios/*.json をビルド時に同梱する(実行時の外部通信なし)
 const modules = import.meta.glob<Scenario>("../scenarios/*.json", { eager: true, import: "default" });
 const scenarios = Object.values(modules).sort((a, b) => a.id.localeCompare(b.id));
+
+/** 種類の表示順と見出し */
+const CATEGORIES: { key: Category; label: string; icon: string }[] = [
+  { key: "build", label: "ボールを前へ運ぶ", icon: "➡️" },
+  { key: "attack", label: "ゴールをねらう", icon: "🥅" },
+  { key: "defend", label: "ボールを取る・守る", icon: "🛡️" },
+  { key: "transition", label: "切りかえ", icon: "🔄" },
+  { key: "restart", label: "リスタート・キーパー", icon: "🧤" },
+];
+/** 同じテーマの別パターン(自分を含む) */
+const siblingsOf = (s: Scenario) => scenarios.filter((x) => x.group === s.group);
 
 const STEP_LABELS = ["はじまり", "動き出し", "パス・ドリブル", "その後", "結果"];
 const READ_PAUSE_MS = 2200; // 自動再生でステップ間に文章を読む時間(ふつうの速さ)
@@ -58,16 +69,32 @@ function renderList() {
   const page = h("main", "list-page");
   const header = h("header", "list-header");
   header.append(h("h1", "app-title", "⚽ サッカー動き方ずかん"), h("p", "lead", "見たい場面を選んでね"));
-  const grid = h("div", "card-grid");
-  for (const s of scenarios) {
-    const a = h("a", "card");
-    a.href = `#/s/${s.id}`;
-    const thumb = new Stage(s, "good", { mini: true });
-    thumb.render(2, 1);
-    a.append(thumb.el, h("span", "card-title", s.title), h("span", "card-theme", s.theme));
-    grid.append(a);
+  page.append(header);
+  // 種類 → テーマ → パターン の順に並べる
+  for (const cat of CATEGORIES) {
+    const inCat = scenarios.filter((s) => s.category === cat.key);
+    if (!inCat.length) continue;
+    const section = h("section", "cat-section");
+    section.append(h("h2", "cat-title", `${cat.icon} ${cat.label}`));
+    const groups = [...new Set(inCat.map((s) => s.group))];
+    for (const g of groups) {
+      const items = inCat.filter((s) => s.group === g);
+      const block = h("div", "group-block");
+      block.append(h("h3", "group-title", items[0].title), h("p", "group-theme", items[0].theme));
+      const grid = h("div", "card-grid");
+      for (const s of items) {
+        const a = h("a", "card");
+        a.href = `#/s/${s.id}`;
+        const thumb = new Stage(s, "good", { mini: true });
+        thumb.render(2, 1);
+        a.append(thumb.el, h("span", "card-pattern", s.pattern));
+        grid.append(a);
+      }
+      block.append(grid);
+      section.append(block);
+    }
+    page.append(section);
   }
-  page.append(header, grid);
   app.replaceChildren(page);
 }
 
@@ -94,7 +121,23 @@ function renderViewer(s: Scenario) {
   const top = h("header", "viewer-header");
   const back = h("a", "back-link", "← もどる");
   back.href = "#/";
-  top.append(back, h("h1", "viewer-title", s.title));
+  const titleBox = h("div", "viewer-titlebox");
+  titleBox.append(h("h1", "viewer-title", s.title), h("span", "pattern-chip", s.pattern));
+  top.append(back, titleBox);
+  // 同じテーマの別パターン(ボールの位置や守備の状況が違う)
+  const siblings = siblingsOf(s);
+  if (siblings.length > 1) {
+    const nav = h("nav", "pattern-nav");
+    nav.setAttribute("aria-label", "ほかのパターン");
+    nav.append(h("span", "pattern-nav-label", "パターン:"));
+    for (const x of siblings) {
+      const a = h("a", `pattern-link${x.id === s.id ? " current" : ""}`, x.pattern);
+      a.href = `#/s/${x.id}`;
+      if (x.id === s.id) a.setAttribute("aria-current", "page");
+      nav.append(a);
+    }
+    top.append(nav);
+  }
 
   const tabs = h("div", "mode-tabs");
   tabs.setAttribute("role", "tablist");

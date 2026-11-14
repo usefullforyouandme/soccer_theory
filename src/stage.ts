@@ -392,7 +392,7 @@ export class Stage {
           if (!this.mini) this.buildCallout(o.player, o.text, o.tone);
           break;
         case "offsideLine":
-          this.buildOffsideLine(o.defending);
+          this.buildOffsideLine(o.defending, cur, prev, i);
           break;
         case "shotCone":
           this.buildShotCone(o);
@@ -409,20 +409,29 @@ export class Stage {
 
   /**
    * オフサイドライン: 守備側の後ろから2人目とボールのうち、守備側のゴールに近い方。
-   * 攻撃側の自陣ではオフサイドにならないので、ハーフウェーラインより手前には来ない。選手の動きに追従する
+   * 攻撃側の自陣ではオフサイドにならないので、ハーフウェーラインより手前には来ない。
+   * ふだんは選手の動きに追従するが、パスのステップでは「パスが出た瞬間」(前ステップの終わり)の位置で止めて見せる
    */
-  private buildOffsideLine(defending: GoalSide) {
+  private buildOffsideLine(defending: GoalSide, cur: Step, prev: Step, i: number) {
     const ids = [...this.players.keys()].filter((id) => teamOf(id) === defending);
-    const line = svg("line", { x1: 0, x2: 50, class: "ov-offside" }, this.overlayLayer);
-    const text = this.mini ? null : this.label("オフサイドライン", 49.4, 0, "ov-offside-label");
-    text?.setAttribute("text-anchor", "end");
-    this.updaters.push(({ pos, ball }) => {
-      const toward = (y: number) => (defending === "away" ? -y : y); // 大きいほど守備側のゴールに近い
+    const toward = (y: number) => (defending === "away" ? -y : y); // 大きいほど守備側のゴールに近い
+    const lineY = (pos: Record<PlayerId, Point>, ballY: number) => {
       const second = ids.map((id) => pos[id].y).sort((a, b) => toward(b) - toward(a))[1];
-      const y = [second, ball.y, 34].reduce((a, b) => (toward(a) > toward(b) ? a : b));
+      return [second, ballY, 34].reduce((a, b) => (toward(a) > toward(b) ? a : b));
+    };
+    const line = svg("line", { x1: 0, x2: 50, class: "ov-offside" }, this.overlayLayer);
+    const passStep = i > 0 && (cur.ball.motion === "ground" || cur.ball.motion === "air");
+    const text = this.mini ? null : this.label(passStep ? "パスの時のオフサイドライン" : "オフサイドライン", 49.4, 0, "ov-offside-label");
+    text?.setAttribute("text-anchor", "end");
+    const place = (y: number) => {
       setAttrs(line, { y1: y, y2: y });
       if (text) setAttrs(text, { y: defending === "away" ? y - 1.1 : y + 1.1 });
-    });
+    };
+    if (passStep) {
+      place(lineY(prev.players, prev.ball.y));
+      return;
+    }
+    this.updaters.push(({ pos, ball }) => place(lineY(pos, ball.y)));
   }
 
   /** シュートコース: ボール(または選手)と両ゴールポストを結ぶ三角形。centerLine はその真ん中の線(キーパーの立つ目安) */
