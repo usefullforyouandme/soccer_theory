@@ -1,0 +1,26 @@
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# 依存関係・ビルド成果物
+node_modules/
+dist/
+build/
+.cache/
+coverage/
+
+# ログ
+*.log
+npm-debug.log*
+
+# 環境変数・認証情報
+.env
+.env.*
+*.local
+
+# AI ツールのローカル設定
+.claude/settings.local.json
+.agents/*.local.json
