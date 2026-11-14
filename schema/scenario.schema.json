@@ -1,0 +1,223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://usefullforyouandme.github.io/soccer_theory/schema/scenario.schema.json",
+  "title": "戦術アニメーション用シナリオ",
+  "description": "8人制サッカー戦術学習アプリのシナリオデータ。座標系: X=0(左タッチライン)〜50(右), Y=0(相手ゴールライン)〜68(自陣ゴールライン)。home は Y=68 側から Y=0 側へ攻撃する。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "title", "theme", "targetGrade", "teams", "variants"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": {
+      "description": "ファイル名と一致させる(kebab-case)",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "title": {
+      "description": "子ども向けタイトル(ひらがな・カタカナ中心)",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20
+    },
+    "theme": {
+      "description": "指導者向けのテーマ説明(漢字可)",
+      "type": "string",
+      "minLength": 1
+    },
+    "coachNote": {
+      "description": "指導者向けの補足(任意・漢字可)",
+      "type": "string"
+    },
+    "targetGrade": { "enum": ["low", "middle", "high"] },
+    "teams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["home", "away"],
+      "properties": {
+        "home": { "$ref": "#/$defs/team" },
+        "away": { "$ref": "#/$defs/team" }
+      }
+    },
+    "variants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["good", "bad"],
+      "properties": {
+        "good": { "$ref": "#/$defs/variant" },
+        "bad": { "$ref": "#/$defs/variant" }
+      }
+    }
+  },
+  "$defs": {
+    "playerId": {
+      "description": "h=home, a=away + 背番号。例: h7, a9",
+      "type": "string",
+      "pattern": "^[ha][1-9][0-9]?$"
+    },
+    "x": { "type": "number", "minimum": 0, "maximum": 50 },
+    "y": { "type": "number", "minimum": 0, "maximum": 68 },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "$ref": "#/$defs/x" },
+        "y": { "$ref": "#/$defs/y" }
+      }
+    },
+    "team": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "formation", "players"],
+      "properties": {
+        "name": { "type": "string", "maxLength": 10 },
+        "formation": { "type": "string", "pattern": "^[0-9](-[0-9]){1,3}$" },
+        "players": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "number", "role"],
+            "properties": {
+              "id": { "$ref": "#/$defs/playerId" },
+              "number": { "type": "integer", "minimum": 1, "maximum": 99 },
+              "role": { "enum": ["GK", "LB", "CB", "RB", "LM", "CM", "RM", "FW"] }
+            }
+          }
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "outcomeBanner", "steps"],
+      "properties": {
+        "label": { "type": "string", "maxLength": 12 },
+        "outcomeBanner": {
+          "description": "Step 5 で大きく表示する結末の見出し",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/step" }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "title", "explanation", "durationMs", "players", "ball", "overlays"],
+      "properties": {
+        "phase": { "enum": ["initial", "movement", "firstPlay", "nextPlay", "outcome"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 12 },
+        "explanation": {
+          "description": "低学年向け: ひらがな・カタカナ中心、40字以内",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "durationMs": {
+          "description": "前ステップからこのステップの状態へ移るまでの実時間(ミリ秒)。等速再生時の長さ。",
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 6000
+        },
+        "players": {
+          "description": "このステップ終了時点の全選手の位置(キー=選手ID)",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/playerId" },
+          "additionalProperties": { "$ref": "#/$defs/point" }
+        },
+        "ball": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "owner", "motion"],
+          "properties": {
+            "x": { "$ref": "#/$defs/x" },
+            "y": { "$ref": "#/$defs/y" },
+            "owner": {
+              "description": "このステップ終了時にボールを持っている選手。シュート中のみ null。",
+              "oneOf": [{ "$ref": "#/$defs/playerId" }, { "type": "null" }]
+            },
+            "motion": {
+              "description": "前ステップからこの位置へボールがどう動いたか",
+              "enum": ["hold", "dribble", "ground", "air", "steal", "shot"]
+            }
+          }
+        },
+        "overlays": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/arrow" },
+              { "$ref": "#/$defs/passLane" },
+              { "$ref": "#/$defs/space" },
+              { "$ref": "#/$defs/triangle" }
+            ]
+          }
+        }
+      }
+    },
+    "arrow": {
+      "description": "このステップでの動きを示す矢印",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "kind", "by", "from", "to"],
+      "properties": {
+        "type": { "const": "arrow" },
+        "kind": { "enum": ["run", "dribble", "pass", "shot"] },
+        "by": { "$ref": "#/$defs/playerId" },
+        "from": { "$ref": "#/$defs/point" },
+        "to": { "$ref": "#/$defs/point" }
+      }
+    },
+    "passLane": {
+      "description": "ステップ終了時点のパスコース(選手位置に追従)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "from", "to", "state"],
+      "properties": {
+        "type": { "const": "passLane" },
+        "from": { "$ref": "#/$defs/playerId" },
+        "to": { "$ref": "#/$defs/playerId" },
+        "state": { "enum": ["open", "blocked"] }
+      }
+    },
+    "space": {
+      "description": "注目させたいスペース(楕円)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "x", "y", "rx", "ry"],
+      "properties": {
+        "type": { "const": "space" },
+        "x": { "$ref": "#/$defs/x" },
+        "y": { "$ref": "#/$defs/y" },
+        "rx": { "type": "number", "exclusiveMinimum": 0, "maximum": 25 },
+        "ry": { "type": "number", "exclusiveMinimum": 0, "maximum": 34 },
+        "label": { "type": "string", "maxLength": 12 }
+      }
+    },
+    "triangle": {
+      "description": "3人で作るトライアングル(選手位置に追従)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "players"],
+      "properties": {
+        "type": { "const": "triangle" },
+        "players": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/playerId" }
+        }
+      }
+    }
+  }
+}
