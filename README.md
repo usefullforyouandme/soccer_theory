@@ -6,7 +6,7 @@
 公開ページ: https://usefullforyouandme.github.io/soccer_theory/
 
 ## ステータス
-ビューア初版(シナリオ 1 本)
+v0.3:学習の流れ(問いかけ → 動き → まとめ)と表現を改善(シナリオ 1 本)
 
 ## ドキュメント
 - [仕様書](docs/SPEC.md)

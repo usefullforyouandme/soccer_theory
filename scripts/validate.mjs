@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// シナリオJSONの検証: JSON Schema(構造) + ロジックチェック(整合性・リアリティ)
+// シナリオJSONの検証: JSON Schema(構造) + ロジックチェック(整合性・リアリティ・教材としての読みやすさ)
 // 使い方: node scripts/validate.mjs [ファイル...]  (省略時は scenarios/*.json 全件)
 import { readFileSync, readdirSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -11,13 +11,20 @@ const PLAYER_SPEED_WARN = 6; // m/s(小学生の全力疾走程度)
 const PLAYER_SPEED_ERROR = 8; // m/s
 const BALL_SPEED_ERROR = 25; // m/s
 const BALL_OWNER_MAX_DIST = 2; // m
-const PLAYER_OVERLAP_DIST = 1; // m
+const PLAYER_OVERLAP_DIST = 2.5; // m(描画上の丸は半径1.5m。これ未満だと背番号が読みにくくなる)
+const START_MATCH_TOLERANCE = 0.5; // m(good/bad の Step 1 は同じ配置)
+const ARROW_TOLERANCE = 1.5; // m(矢印の始点・終点と実際の位置のずれ)
+const TEXT_LIMIT_LOW = 30; // 低学年向けの表示文字数の目安
 const KANJI = /\p{Script=Han}/u;
+const TOKEN = /\{([ha][1-9][0-9]?)\}/g;
 
 const schema = JSON.parse(readFileSync(join(ROOT, "schema/scenario.schema.json"), "utf8"));
 const validateSchema = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+/** 画面に表示される文字列({h7} → 7ばん) */
+const rendered = (s) => s.replace(TOKEN, (_, id) => `${id.slice(1)}ばん`);
+const tokens = (s) => [...s.matchAll(TOKEN)].map((m) => m[1]);
 
 function checkLogic(s, file) {
   const errors = [];
@@ -40,23 +47,31 @@ function checkLogic(s, file) {
     }
   }
   const isPlayer = (id) => roster.has(id);
+  const sideOf = (id) => roster.get(id)?.side;
 
-  if (s.targetGrade === "low") {
-    if (KANJI.test(s.title)) warn("title", "低学年向けのため漢字を避けてください");
-  }
+  // 子どもに見える文字列のチェック(漢字・長さ・トークン)
+  const low = s.targetGrade === "low";
+  const checkText = (where, text, { limit } = {}) => {
+    for (const id of tokens(text)) if (!isPlayer(id)) err(where, `存在しない選手トークン {${id}} があります`);
+    const r = rendered(text);
+    if (low && KANJI.test(r)) warn(where, `漢字を含みます: "${r}"`);
+    if (low && limit && [...r].length > limit) warn(where, `低学年には長すぎます(${[...r].length}字 > ${limit}字): "${r}"`);
+  };
+  checkText("title", s.title);
+  checkText("question", s.question, { limit: TEXT_LIMIT_LOW });
+  checkText("keyPoint", s.keyPoint, { limit: TEXT_LIMIT_LOW });
+  for (const side of ["home", "away"]) checkText(`teams.${side}.name`, s.teams[side].name);
 
   for (const [vName, v] of Object.entries(s.variants)) {
-    if (s.targetGrade === "low" && KANJI.test(v.outcomeBanner)) {
-      warn(`${vName}.outcomeBanner`, "低学年向けのため漢字を避けてください");
-    }
+    checkText(`${vName}.label`, v.label);
+    checkText(`${vName}.outcomeBanner`, v.outcomeBanner);
+
     v.steps.forEach((st, i) => {
       const at = `${vName}.steps[${i}]`;
       if (st.phase !== PHASES[i]) err(at, `phase は "${PHASES[i]}" にしてください(現在 "${st.phase}")`);
-      if (s.targetGrade === "low") {
-        for (const key of ["title", "explanation"]) {
-          if (KANJI.test(st[key])) warn(`${at}.${key}`, `漢字を含みます: "${st[key]}"`);
-        }
-      }
+      checkText(`${at}.title`, st.title);
+      checkText(`${at}.explanation`, st.explanation, { limit: TEXT_LIMIT_LOW });
+      for (const id of st.focus ?? []) if (!isPlayer(id)) err(`${at}.focus`, `存在しない選手 ${id} があります`);
 
       // 全選手がそろっているか
       const ids = Object.keys(st.players);
@@ -67,7 +82,7 @@ function checkLogic(s, file) {
       for (let a = 0; a < ids.length; a++) {
         for (let b = a + 1; b < ids.length; b++) {
           const d = dist(st.players[ids[a]], st.players[ids[b]]);
-          if (d < PLAYER_OVERLAP_DIST) warn(at, `${ids[a]} と ${ids[b]} が重なっています(${d.toFixed(1)}m)`);
+          if (d < PLAYER_OVERLAP_DIST) warn(at, `${ids[a]} と ${ids[b]} が近すぎて重なって見えます(${d.toFixed(1)}m)`);
         }
       }
 
@@ -83,9 +98,10 @@ function checkLogic(s, file) {
       }
       if (i === 0 && ball.motion !== "hold") err(`${at}.ball`, "Step 1 の motion は hold にしてください");
 
-      // 前ステップとの整合(速度・ボールの受け渡し)
-      if (i > 0) {
-        const prev = v.steps[i - 1];
+      const prev = i > 0 ? v.steps[i - 1] : null;
+
+      // 前ステップとの整合(速度・ボールの受け渡し・オフサイド)
+      if (prev) {
         const sec = st.durationMs / 1000;
         for (const id of roster.keys()) {
           const p0 = prev.players[id];
@@ -106,25 +122,81 @@ function checkLogic(s, file) {
         if (["ground", "air", "steal"].includes(ball.motion) && !ownerChanged) {
           err(`${at}.ball`, `motion=${ball.motion} なのに持ち主が変わっていません`);
         }
-        if (ball.motion === "steal" && prev.ball.owner && ball.owner && roster.get(prev.ball.owner)?.side === roster.get(ball.owner)?.side) {
+        if (ball.motion === "steal" && prev.ball.owner && ball.owner && sideOf(prev.ball.owner) === sideOf(ball.owner)) {
           err(`${at}.ball`, "steal は相手チームからボールを奪う場合だけ使ってください");
+        }
+        if (["ground", "air"].includes(ball.motion) && ball.owner && prev.ball.owner) {
+          if (sideOf(prev.ball.owner) !== sideOf(ball.owner)) {
+            err(`${at}.ball`, "相手へのパスは steal を使ってください");
+          } else {
+            const off = offside(ball.owner, prev);
+            if (off) err(`${at}.ball`, off);
+          }
         }
       }
 
-      // オーバーレイの参照
+      // オーバーレイの参照と整合
       st.overlays.forEach((o, j) => {
         const oat = `${at}.overlays[${j}]`;
-        const refs = o.type === "arrow" ? [o.by] : o.type === "passLane" ? [o.from, o.to] : o.type === "triangle" ? o.players : [];
+        const refs = o.type === "arrow" ? [o.by]
+          : o.type === "passLane" ? [o.from, o.to]
+          : o.type === "triangle" ? o.players
+          : o.type === "callout" ? [o.player] : [];
         for (const id of refs) if (!isPlayer(id)) err(oat, `存在しない選手 ${id} を参照しています`);
-        if (o.type === "triangle" && new Set(o.players.map((id) => roster.get(id)?.side)).size > 1) {
+        if (o.type === "triangle" && new Set(o.players.map(sideOf)).size > 1) {
           err(oat, "トライアングルは同じチームの3人で作ってください");
         }
-        if (o.type === "passLane" && roster.get(o.from)?.side !== roster.get(o.to)?.side) {
+        if (o.type === "passLane" && sideOf(o.from) !== sideOf(o.to)) {
           err(oat, "パスコースは同じチームの選手同士にしてください");
         }
+        if (o.type === "space" && o.label) checkText(`${oat}.label`, o.label);
+        if (o.type === "callout") checkText(`${oat}.text`, o.text);
+        if (o.type === "arrow" && prev && isPlayer(o.by)) checkArrow(o, prev, st, oat);
       });
     });
   }
+
+  // good と bad の Step 1 は同じ配置にする(比べる起点をそろえる)
+  const g0 = s.variants.good.steps[0];
+  const b0 = s.variants.bad.steps[0];
+  for (const id of roster.keys()) {
+    if (g0.players[id] && b0.players[id] && dist(g0.players[id], b0.players[id]) > START_MATCH_TOLERANCE) {
+      warn("bad.steps[0]", `${id} の初期位置が good と違います`);
+    }
+  }
+  if (dist(g0.ball, b0.ball) > START_MATCH_TOLERANCE) warn("bad.steps[0].ball", "ボールの初期位置が good と違います");
+
+  /** 矢印が実際の動きと食い違っていないか(矢印が「うそ」をつかないように) */
+  function checkArrow(o, prev, st, oat) {
+    if (o.kind === "run" || o.kind === "dribble") {
+      const p0 = prev.players[o.by];
+      const p1 = st.players[o.by];
+      if (o.from && dist(o.from, p0) > ARROW_TOLERANCE) warn(oat, `矢印の始点が ${o.by} の前の位置とずれています`);
+      if (o.to && dist(o.to, p1) > ARROW_TOLERANCE) warn(oat, `矢印の終点が ${o.by} の位置とずれています`);
+      if (!o.from && !o.to && dist(p0, p1) < 1) warn(oat, `${o.by} がほとんど動いていないのに矢印があります`);
+      if (o.kind === "dribble" && st.ball.owner !== o.by) warn(oat, `ドリブルの矢印ですが ${o.by} がボールを持っていません`);
+    } else {
+      if (prev.ball.owner !== o.by) warn(oat, `${o.kind} の矢印ですが ${o.by} は前ステップでボールを持っていません`);
+      if (o.from && dist(o.from, prev.ball) > ARROW_TOLERANCE) warn(oat, "矢印の始点がボールの前の位置とずれています");
+      if (o.to && dist(o.to, st.ball) > ARROW_TOLERANCE) warn(oat, "矢印の終点がボールの位置とずれています");
+    }
+  }
+
+  /** パスが出た瞬間(前ステップ終了時)の位置で簡易オフサイド判定 */
+  function offside(receiver, prev) {
+    const side = sideOf(receiver);
+    const r = prev.players[receiver];
+    // home は Y=0 に向かって攻める。相手陣内 = Y<34
+    const toward = side === "home" ? (y) => -y : (y) => y; // 大きいほど相手ゴールに近い
+    if (toward(r.y) <= toward(34)) return null; // 自陣ではオフサイドにならない
+    const defenders = [...roster.values()].filter((p) => p.side !== side).map((p) => toward(prev.players[p.id].y)).sort((a, b) => b - a);
+    const secondLast = defenders[1];
+    if (toward(r.y) > secondLast && toward(r.y) > toward(prev.ball.y)) {
+      return `${receiver} がオフサイドの位置でパスを受けています(後ろから2人目の守備者より前)`;
+    }
+    return null;
+  }
+
   return { errors, warnings };
 }
 

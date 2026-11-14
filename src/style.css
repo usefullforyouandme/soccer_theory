@@ -19,6 +19,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -87,6 +91,7 @@ summary:focus-visible {
 
 .card .pitch {
   width: 100%;
+  aspect-ratio: 53 / 72;
   border-radius: 10px;
 }
 
@@ -168,7 +173,7 @@ summary:focus-visible {
 
 .stage-area.mode-compare {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-  --pitch-h: clamp(280px, calc(100dvh - 400px), 720px);
+  --pitch-h: clamp(260px, calc(100dvh - 470px), 720px);
 }
 
 .stage {
@@ -192,8 +197,8 @@ summary:focus-visible {
 
 .pitch {
   display: block;
-  width: min(100%, calc(var(--pitch-h) * 55 / 73));
-  aspect-ratio: 55 / 73;
+  width: min(100%, calc(var(--pitch-h) * 3 / 4));
+  aspect-ratio: 3 / 4;
   margin: 0 auto;
   border-radius: 14px;
   background: #3a8f44;
@@ -251,7 +256,7 @@ summary:focus-visible {
 /* 縦長のタブレット・スマホでは、ピッチ+説明+操作が1画面に収まる大きさにする */
 @media (max-width: 899px) {
   :root {
-    --pitch-h: clamp(300px, calc(100dvh - 500px), 760px);
+    --pitch-h: clamp(300px, calc(100dvh - 600px), 760px);
   }
 }
 
@@ -272,7 +277,7 @@ summary:focus-visible {
   .stage-area.mode-good .pitch,
   .stage-area.mode-bad .pitch {
     grid-row: 2 / span 2;
-    width: calc(var(--pitch-h) * 55 / 73);
+    width: calc(var(--pitch-h) * 3 / 4);
     margin: 0;
   }
 
@@ -331,7 +336,7 @@ summary:focus-visible {
 }
 
 .dot-label {
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   white-space: nowrap;
 }
@@ -560,39 +565,35 @@ summary:focus-visible {
   stroke-linecap: round;
 }
 
-.ov-arrow.home,
-.marker.home {
-  stroke: #fff;
-  fill: #fff;
-}
-
-.ov-arrow.away,
-.marker.away {
-  stroke: #ffc4c4;
-  fill: #ffc4c4;
-}
-
-.ov-arrow.home,
-.ov-arrow.away {
-  fill: none;
-}
-
 .ov-arrow.run {
   stroke-dasharray: 1.2 0.8;
 }
 
+.ov-arrow.pass {
+  stroke-width: 0.6;
+}
+
+/* ドリブルはボールの軌跡のような小さな丸の連なり */
 .ov-arrow.dribble {
-  stroke-width: 0.55;
-  stroke-dasharray: 0.05 0.75;
+  stroke-width: 0.7;
+  stroke-dasharray: 0.01 1;
 }
 
 .ov-arrow.shot {
-  stroke-width: 0.7;
+  stroke-width: 0.9;
 }
 
-.marker.home,
-.marker.away {
-  stroke: none;
+.ov-arrow.bad {
+  stroke-width: 0.55;
+}
+
+.ov-bad-mark {
+  fill: #ff3b30;
+  font-size: 2.6px;
+  font-weight: 900;
+  stroke: #fff;
+  stroke-width: 0.35px;
+  paint-order: stroke;
 }
 
 .banner-bg {
@@ -665,6 +666,16 @@ summary:focus-visible {
   margin: 4px 0;
 }
 
+.mode-compare + .dock .info-card,
+.mode-compare + .dock .scrubber {
+  flex-basis: 100%;
+}
+
+.mode-compare + .dock .info-card {
+  max-width: 820px;
+  margin: 4px auto;
+}
+
 .mode-compare + .dock .dot-label,
 .mode-compare + .dock .legend {
   display: none;
@@ -680,4 +691,235 @@ summary:focus-visible {
     min-width: 0;
     flex: 1;
   }
+}
+
+/* ---------- v0.3 追加: 学習の流れ・表現 ---------- */
+
+/* 説明文の選手名チップ(ピッチの丸と同じ色) */
+.pchip {
+  display: inline-block;
+  padding: 0 0.35em;
+  margin: 0 0.05em;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.pchip.home {
+  background: var(--home);
+}
+
+.pchip.away {
+  background: var(--away);
+}
+
+/* 問いかけ / きょうの ポイント */
+.info-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 4px 0 8px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 3px solid;
+}
+
+.info-card.question {
+  background: #fff7e0;
+  border-color: #ffc94d;
+}
+
+.info-card.point {
+  background: #e8f6ff;
+  border-color: #64b5f6;
+}
+
+.info-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 26px;
+  font-weight: 900;
+  color: #e09600;
+}
+
+.info-head {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.info-text {
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+.answer-btn {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-height: 52px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* 時間バー */
+.scrubber {
+  display: block;
+  width: min(100%, 520px);
+  height: 32px;
+  margin: 0 auto;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.ctrl-speak.on {
+  background: #e8f6ff;
+  border-color: #64b5f6;
+}
+
+/* 凡例(チーム色+矢印の種類) */
+.legend {
+  row-gap: 4px;
+}
+
+.lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #3f9b4a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.lg svg {
+  width: 30px;
+  height: 10px;
+}
+
+.lg-ghost svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 攻める方向 */
+.dir-arrow {
+  fill: rgba(255, 255, 255, 0.28);
+}
+
+.dir-text {
+  fill: rgba(255, 255, 255, 0.9);
+  font-size: 1.7px;
+  font-weight: 800;
+  writing-mode: vertical-rl;
+  letter-spacing: 0.15px;
+}
+
+.goal-label {
+  fill: #fff;
+  font-size: 2.1px;
+  font-weight: 800;
+}
+
+/* 選手の向き */
+.player .nose path {
+  fill: #fff;
+  opacity: 0.9;
+}
+
+/* ボール */
+.ball-body {
+  fill: #fff;
+  stroke: #222;
+  stroke-width: 0.18;
+}
+
+.ball-patch {
+  fill: #222;
+}
+
+/* 足あと(これまでの動き) */
+.trail {
+  fill: none;
+  stroke-width: 0.35;
+  stroke-dasharray: 0.5 0.5;
+  opacity: 0.55;
+}
+
+.trail.home {
+  stroke: #bcd3ff;
+}
+
+.trail.away {
+  stroke: #ffc4c4;
+}
+
+.trail-dot {
+  opacity: 0.6;
+}
+
+.trail-dot.home {
+  fill: #bcd3ff;
+}
+
+.trail-dot.away {
+  fill: #ffc4c4;
+}
+
+/* 比較表示: おてほんの位置 */
+.ghost {
+  fill: rgba(30, 91, 216, 0.25);
+  stroke: #9cc3ff;
+  stroke-width: 0.3;
+  stroke-dasharray: 0.6 0.4;
+}
+
+.ghost-num {
+  fill: #e3edff;
+  font-size: 1.5px;
+  font-weight: 800;
+}
+
+.ghost-link {
+  stroke: #9cc3ff;
+  stroke-width: 0.2;
+  stroke-dasharray: 0.4 0.4;
+}
+
+/* 吹き出し */
+.callout-bg,
+.callout-tip {
+  stroke: #fff;
+  stroke-width: 0.25;
+}
+
+.callout.good .callout-bg,
+.callout.good .callout-tip {
+  fill: var(--good);
+}
+
+.callout.bad .callout-bg,
+.callout.bad .callout-tip {
+  fill: var(--bad);
+}
+
+.callout-text {
+  fill: #fff;
+  font-size: 1.6px;
+  font-weight: 800;
 }
