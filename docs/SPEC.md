@@ -148,6 +148,8 @@ soccer_theory/
 5. コミットして main に push すると、CI で再度検証され、問題がなければ GitHub Pages に公開される。
 
 ## 11. 今後の予定
+レビューで挙がった修正点は `docs/REVIEW_FINDINGS.md` に記録している(対応時に状態を更新)。
+
 - [x] ビューアの実装(Vite + TypeScript + SVG)
 - [x] GitHub Pages への自動デプロイ
 - [ ] シナリオの追加(守備の切り替え、ビルドアップ、カバーリング等)

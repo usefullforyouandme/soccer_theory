@@ -12,6 +12,7 @@
 - [仕様書](docs/SPEC.md)
 - [シナリオ生成プロンプト](docs/scenario-prompt.md)
 - [シナリオ JSON Schema](schema/scenario.schema.json)
+- [レビュー指摘一覧(修正予定)](docs/REVIEW_FINDINGS.md)
 
 ## 開発
 ```bash
