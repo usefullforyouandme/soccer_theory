@@ -14,16 +14,27 @@ const BALL_OWNER_MAX_DIST = 2; // m
 const PLAYER_OVERLAP_DIST = 2.5; // m(描画上の丸は半径1.5m。これ未満だと背番号が読みにくくなる)
 const START_MATCH_TOLERANCE = 0.5; // m(good/bad の Step 1 は同じ配置)
 const ARROW_TOLERANCE = 1.5; // m(矢印の始点・終点と実際の位置のずれ)
-const TEXT_LIMIT_LOW = 30; // 低学年向けの表示文字数の目安
-const KANJI = /\p{Script=Han}/u;
+const TEXT_LIMIT = { low: 30, middle: 40, high: 50 }; // 対象学年ごとの表示文字数の目安
+const KANJI = /\p{Script=Han}/gu;
+// 学年別漢字配当表(2020年度〜)の1〜4年生分。middle(4年生向け)はこれ以外の漢字を警告する
+const KANJI_UP_TO_G4 = new Set([...(
+  // 1年
+  "一右雨円王音下火花貝学気九休玉金空月犬見五口校左三山子四糸字耳七車手十出女小上森人水正生青夕石赤千川先早草足村大男竹中虫町天田土二日入年白八百文木本名目立力林六" +
+  // 2年
+  "引羽雲園遠何科夏家歌画回会海絵外角楽活間丸岩顔汽記帰弓牛魚京強教近兄形計元言原戸古午後語工公広交光考行高黄合谷国黒今才細作算止市矢姉思紙寺自時室社弱首秋週春書少場色食心新親図数西声星晴切雪船線前組走多太体台地池知茶昼長鳥朝直通弟店点電刀冬当東答頭同道読内南肉馬売買麦半番父風分聞米歩母方北毎妹万明鳴毛門夜野友用曜来里理話" +
+  // 3年
+  "悪安暗医委意育員院飲運泳駅央横屋温化荷界開階寒感漢館岸起期客究急級宮球去橋業曲局銀区苦具君係軽血決研県庫湖向幸港号根祭皿仕死使始指歯詩次事持式実写者主守取酒受州拾終習集住重宿所暑助昭消商章勝乗植申身神真深進世整昔全相送想息速族他打対待代第題炭短談着注柱丁帳調追定庭笛鉄転都度投豆島湯登等動童農波配倍箱畑発反坂板皮悲美鼻筆氷表秒病品負部服福物平返勉放味命面問役薬由油有遊予羊洋葉陽様落流旅両緑礼列練路和" +
+  // 4年
+  "愛案以衣位茨印英栄媛塩岡億加果貨課芽賀改械害街各覚潟完官管関観願岐希季旗器機議求泣給挙漁共協鏡競極熊訓軍郡群径景芸欠結建健験固功好香候康佐差菜最埼材崎昨札刷察参産散残氏司試児治滋辞鹿失借種周祝順初松笑唱焼照城縄臣信井成省清静席積折節説浅戦選然争倉巣束側続卒孫帯隊達単置仲沖兆低底的典伝徒努灯働特徳栃奈梨熱念敗梅博阪飯飛必票標不夫付府阜富副兵別辺変便包法望牧末満未民無約勇要養浴利陸良料量輪類令冷例連老労録"
+)]);
 const TOKEN = /\{([ha][1-9][0-9]?)\}/g;
 
 const schema = JSON.parse(readFileSync(join(ROOT, "schema/scenario.schema.json"), "utf8"));
 const validateSchema = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
 
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
-/** 画面に表示される文字列({h7} → 7ばん) */
-const rendered = (s) => s.replace(TOKEN, (_, id) => `${id.slice(1)}ばん`);
+/** 画面に表示される文字列({h7} → 7番。低学年向けは 7ばん) */
+const rendered = (s, grade) => s.replace(TOKEN, (_, id) => `${id.slice(1)}${grade === "low" ? "ばん" : "番"}`);
 const tokens = (s) => [...s.matchAll(TOKEN)].map((m) => m[1]);
 
 function checkLogic(s, file) {
@@ -50,16 +61,22 @@ function checkLogic(s, file) {
   const sideOf = (id) => roster.get(id)?.side;
 
   // 子どもに見える文字列のチェック(漢字・長さ・トークン)
-  const low = s.targetGrade === "low";
-  const checkText = (where, text, { limit } = {}) => {
+  const grade = s.targetGrade;
+  const textLimit = TEXT_LIMIT[grade];
+  const checkText = (where, text, { long = false } = {}) => {
     for (const id of tokens(text)) if (!isPlayer(id)) err(where, `存在しない選手トークン {${id}} があります`);
-    const r = rendered(text);
-    if (low && KANJI.test(r)) warn(where, `漢字を含みます: "${r}"`);
-    if (low && limit && [...r].length > limit) warn(where, `低学年には長すぎます(${[...r].length}字 > ${limit}字): "${r}"`);
+    const r = rendered(text, grade);
+    const kanji = [...new Set(r.match(KANJI) ?? [])];
+    if (grade === "low" && kanji.length) warn(where, `低学年向けのため漢字を避けてください: "${r}"`);
+    if (grade === "middle") {
+      const hard = kanji.filter((k) => !KANJI_UP_TO_G4.has(k));
+      if (hard.length) warn(where, `4年生までに習わない漢字(${hard.join("")})を含みます: "${r}"`);
+    }
+    if (long && [...r].length > textLimit) warn(where, `対象学年には長すぎます(${[...r].length}字 > ${textLimit}字): "${r}"`);
   };
   checkText("title", s.title);
-  checkText("question", s.question, { limit: TEXT_LIMIT_LOW });
-  checkText("keyPoint", s.keyPoint, { limit: TEXT_LIMIT_LOW });
+  checkText("question", s.question, { long: true });
+  checkText("keyPoint", s.keyPoint, { long: true });
   for (const side of ["home", "away"]) checkText(`teams.${side}.name`, s.teams[side].name);
 
   for (const [vName, v] of Object.entries(s.variants)) {
@@ -70,7 +87,7 @@ function checkLogic(s, file) {
       const at = `${vName}.steps[${i}]`;
       if (st.phase !== PHASES[i]) err(at, `phase は "${PHASES[i]}" にしてください(現在 "${st.phase}")`);
       checkText(`${at}.title`, st.title);
-      checkText(`${at}.explanation`, st.explanation, { limit: TEXT_LIMIT_LOW });
+      checkText(`${at}.explanation`, st.explanation, { long: true });
       for (const id of st.focus ?? []) if (!isPlayer(id)) err(`${at}.focus`, `存在しない選手 ${id} があります`);
 
       // 全選手がそろっているか

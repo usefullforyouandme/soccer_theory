@@ -4,6 +4,7 @@ export type VariantKey = "good" | "bad";
 export type Phase = "initial" | "movement" | "firstPlay" | "nextPlay" | "outcome";
 export type BallMotion = "hold" | "dribble" | "ground" | "air" | "steal" | "shot";
 export type Judgement = "good" | "bad";
+export type Grade = "low" | "middle" | "high";
 
 export interface Point {
   x: number;
@@ -57,7 +58,7 @@ export type Overlay = ArrowOverlay | PassLaneOverlay | SpaceOverlay | TriangleOv
 export interface Step {
   phase: Phase;
   title: string;
-  /** {h7} のような選手トークンを含められる(画面では色付きの「7ばん」になる) */
+  /** {h7} のような選手トークンを含められる(画面では色付きの「7番」になる) */
   explanation: string;
   durationMs: number;
   /** 強調する選手。省略時は explanation に出てくる選手 */
@@ -91,7 +92,7 @@ export interface Scenario {
   title: string;
   theme: string;
   coachNote?: string;
-  targetGrade: "low" | "middle" | "high";
+  targetGrade: Grade;
   /** Step 1 のあとに出す問いかけ(予想させる) */
   question: string;
   /** 最後に出す「きょうの ポイント」 */

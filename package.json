@@ -2,7 +2,7 @@
   "name": "soccer-theory",
   "version": "0.1.0",
   "private": true,
-  "description": "小学生(低学年)向け 8人制サッカー戦術学習ツール",
+  "description": "小学4年生向け 8人制サッカー戦術学習ツール",
   "type": "module",
   "scripts": {
     "dev": "vite",

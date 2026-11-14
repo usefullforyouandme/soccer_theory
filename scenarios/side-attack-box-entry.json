@@ -1,15 +1,15 @@
 {
   "schemaVersion": 2,
   "id": "side-attack-box-entry",
-  "title": "サイドから ゴールまえへ",
+  "title": "サイドからゴール前へ",
   "theme": "サイドでボールを持った時の、中央FWと逆サイドMFのゴール前への入り方",
   "coachNote": "FW(9)がニアへ斜めに走ってDFとGKを引きつけ、逆サイドMF(8)が遅れてペナルティスポット付近へ入ることで、マイナスのクロス(プルバック)のコースが生まれる。bad はこの2人が「ボールに寄る/見ているだけ」になり、ゴール前に誰もいない典型例。出しどころを失ったボール保持者が密集へパスし、奪われた瞬間に押し上げていた最終ラインの背後を突かれる(攻撃時に後ろを上げること自体は正しいので、bad でも他の選手は good と同じ動きにしている)。",
-  "targetGrade": "low",
-  "question": "{h9}と {h8}は どこへ はしると いいかな?",
-  "keyPoint": "ボールに よらないで、ゴールまえへ はしろう!",
+  "targetGrade": "middle",
+  "question": "{h9}と{h8}は、どこへ走ればチャンスになるかな?",
+  "keyPoint": "ボールに近づきすぎず、ゴール前に2人で入ろう!",
   "teams": {
     "home": {
-      "name": "みかた",
+      "name": "味方",
       "formation": "3-3-1",
       "players": [
         {
@@ -55,7 +55,7 @@
       ]
     },
     "away": {
-      "name": "あいて",
+      "name": "相手",
       "formation": "3-3-1",
       "players": [
         {
@@ -103,13 +103,13 @@
   },
   "variants": {
     "good": {
-      "label": "おてほん",
-      "outcomeBanner": "フリーで シュート!",
+      "label": "お手本",
+      "outcomeBanner": "フリーでシュート!",
       "steps": [
         {
           "phase": "initial",
           "title": "はじまり",
-          "explanation": "{h7}が サイドで ボールを もったよ。",
+          "explanation": "{h7}が左サイドでボールを持った。ゴール前の相手は3人だ。",
           "durationMs": 1500,
           "focus": ["h7", "h9", "h8"],
           "players": {
@@ -140,8 +140,8 @@
         },
         {
           "phase": "movement",
-          "title": "うごきだし",
-          "explanation": "{h9}は ゴールの ちかくへ、{h8}は まんなかへ!",
+          "title": "動き出し",
+          "explanation": "{h9}はゴールに近い方(ニア)へ、{h8}は中央へ走り出す。",
           "durationMs": 2500,
           "players": {
             "h1": { "x": 25, "y": 56 },
@@ -186,13 +186,13 @@
             {
               "type": "callout",
               "player": "h9",
-              "text": "ゴールへ!",
+              "text": "ニアへ!",
               "tone": "good"
             },
             {
               "type": "callout",
               "player": "h8",
-              "text": "まんなかへ!",
+              "text": "中央へ!",
               "tone": "good"
             }
           ]
@@ -200,7 +200,7 @@
         {
           "phase": "firstPlay",
           "title": "ドリブル",
-          "explanation": "あいてが {h9}に ついていった。{h7}は ドリブル!",
+          "explanation": "相手の{a3}が{h9}について行き、サイドが空いた。{h7}はドリブルで前へ!",
           "durationMs": 3000,
           "players": {
             "h1": { "x": 25, "y": 54 },
@@ -253,20 +253,20 @@
               "y": 10,
               "rx": 4,
               "ry": 3,
-              "label": "ここが あく!"
+              "label": "ここが空く!"
             },
             {
               "type": "callout",
               "player": "h9",
-              "text": "ひきつける",
+              "text": "引きつける",
               "tone": "good"
             }
           ]
         },
         {
           "phase": "nextPlay",
-          "title": "うしろへ パス",
-          "explanation": "{h8}が フリー! {h7}は うしろの {h8}へ パス。",
+          "title": "後ろへパス",
+          "explanation": "{h9}が相手を引きつけて{h8}がフリーに。{h7}は後ろの{h8}へパス!",
           "durationMs": 2000,
           "players": {
             "h1": { "x": 25, "y": 52 },
@@ -309,7 +309,7 @@
         {
           "phase": "outcome",
           "title": "シュート!",
-          "explanation": "{h8}が シュート! ふたりで はいった おかげだよ。",
+          "explanation": "{h8}がフリーでシュート!2人でゴール前に入ったから生まれたチャンスだ。",
           "durationMs": 1500,
           "focus": ["h8", "h9"],
           "players": {
@@ -347,13 +347,13 @@
       ]
     },
     "bad": {
-      "label": "よくある ミス",
-      "outcomeBanner": "カウンターで ピンチ!",
+      "label": "よくあるミス",
+      "outcomeBanner": "カウンターでピンチ!",
       "steps": [
         {
           "phase": "initial",
           "title": "はじまり",
-          "explanation": "{h7}が サイドで ボールを もったよ。",
+          "explanation": "{h7}が左サイドでボールを持った。ゴール前の相手は3人だ。",
           "durationMs": 1500,
           "focus": ["h7", "h9", "h8"],
           "players": {
@@ -384,8 +384,8 @@
         },
         {
           "phase": "movement",
-          "title": "よりすぎ",
-          "explanation": "{h9}は ボールに よって きた。{h8}は みているだけ…",
+          "title": "近づきすぎ",
+          "explanation": "{h9}がボールに近づきすぎた。{h8}はボールを見ているだけ…",
           "durationMs": 2500,
           "players": {
             "h1": { "x": 25, "y": 56 },
@@ -426,21 +426,21 @@
             {
               "type": "callout",
               "player": "h9",
-              "text": "よりすぎ",
+              "text": "近づきすぎ",
               "tone": "bad"
             },
             {
               "type": "callout",
               "player": "h8",
-              "text": "みてるだけ",
+              "text": "見てるだけ",
               "tone": "bad"
             }
           ]
         },
         {
           "phase": "firstPlay",
-          "title": "ちかくへ パス",
-          "explanation": "ゴールまえに だれも いない。{h7}は {h9}へ パス。",
+          "title": "近くへパス",
+          "explanation": "ゴール前にだれもいないので、{h7}は近くの{h9}へパスするしかない。",
           "durationMs": 2000,
           "players": {
             "h1": { "x": 25, "y": 54 },
@@ -478,14 +478,14 @@
               "y": 8,
               "rx": 6,
               "ry": 4,
-              "label": "だれも いない"
+              "label": "だれもいない"
             }
           ]
         },
         {
           "phase": "nextPlay",
-          "title": "とられた!",
-          "explanation": "{h9}が かこまれて、あいての {a6}に とられた!",
+          "title": "取られた!",
+          "explanation": "{h9}は相手にかこまれ、相手の{a6}にボールを取られた!",
           "durationMs": 2000,
           "players": {
             "h1": { "x": 25, "y": 52 },
@@ -528,7 +528,7 @@
         {
           "phase": "outcome",
           "title": "ピンチ!",
-          "explanation": "あいての {a9}が キーパーと 1たい1!",
+          "explanation": "味方は前に出ていて後ろが空いている。相手の{a9}がキーパーと1対1だ!",
           "durationMs": 3000,
           "players": {
             "h1": { "x": 25, "y": 49.5 },

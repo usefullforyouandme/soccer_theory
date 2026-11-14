@@ -26,7 +26,7 @@
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
     },
     "title": {
-      "description": "子ども向けタイトル(ひらがな・カタカナ中心)",
+      "description": "子ども向けタイトル(対象学年に合わせた表記)",
       "type": "string",
       "minLength": 1,
       "maxLength": 20
@@ -45,16 +45,17 @@
         "low",
         "middle",
         "high"
-      ]
+      ],
+      "description": "対象学年。low=1〜3年(ひらがなのみ)、middle=4年生(4年生までの漢字)、high=5〜6年"
     },
     "question": {
-      "description": "Step 1 のあとに出す問いかけ(子どもに予想させる)。{h9} 形式の選手トークン可。表示文字数 30 字以内推奨",
+      "description": "Step 1 のあとに出す問いかけ(子どもに予想させる)。{h9} 形式の選手トークン可",
       "type": "string",
       "minLength": 1,
       "maxLength": 50
     },
     "keyPoint": {
-      "description": "最後に出す「きょうの ポイント」。原則を1文で。表示文字数 30 字以内推奨",
+      "description": "最後に出す「今日のポイント」。原則を具体的な行動で1文に",
       "type": "string",
       "minLength": 1,
       "maxLength": 50
@@ -236,7 +237,7 @@
           "maxLength": 12
         },
         "explanation": {
-          "description": "低学年向け: ひらがな・カタカナのみ。{h7} のような選手トークンを使うと画面で色付きの「7ばん」になる。表示文字数 30 字以内推奨",
+          "description": "{h7} のような選手トークンを使うと画面で色付きの「7番」(low は「7ばん」)になる。表示文字数の目安は middle 40字 / low 30字。漢字は middle が4年生まで、low は使わない",
           "type": "string",
           "minLength": 1,
           "maxLength": 50

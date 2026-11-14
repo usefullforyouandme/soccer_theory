@@ -1,5 +1,5 @@
 // 1パターン(おてほん/ミス)分のピッチ描画。時間の管理は main.ts が行い、ここは「ステップ i の進捗 t」の1コマを描く
-import type { ArrowOverlay, Ball, Overlay, PlayerId, Point, Scenario, Step, Variant, VariantKey } from "./types";
+import type { ArrowOverlay, Ball, Grade, Overlay, PlayerId, Point, Scenario, Step, Variant, VariantKey } from "./types";
 
 const NS = "http://www.w3.org/2000/svg";
 const PLAYER_R = 1.5;
@@ -48,19 +48,19 @@ const unit = (v: Point): Point => {
 };
 const teamOf = (id: PlayerId) => (id.startsWith("h") ? "home" : "away");
 
-// ---------- 説明文の選手トークン({h7} → 色付きの「7ばん」) ----------
-export const playerLabel = (id: PlayerId) => `${id.slice(1)}ばん`;
-export const plainText = (s: string) => s.replace(TOKEN, (_, id: string) => playerLabel(id));
+// ---------- 説明文の選手トークン({h7} → 色付きの「7番」。低学年向けは「7ばん」) ----------
+export const playerLabel = (id: PlayerId, grade: Grade) => `${id.slice(1)}${grade === "low" ? "ばん" : "番"}`;
+export const plainText = (s: string, grade: Grade) => s.replace(TOKEN, (_, id: string) => playerLabel(id, grade));
 export const mentionedPlayers = (s: string) => [...s.matchAll(TOKEN)].map((m) => m[1]);
 
 /** トークンをチーム色のチップにして parent に流し込む */
-export function renderRichText(s: string, parent: HTMLElement) {
+export function renderRichText(s: string, parent: HTMLElement, grade: Grade) {
   parent.replaceChildren();
   let last = 0;
   for (const m of s.matchAll(TOKEN)) {
     parent.append(s.slice(last, m.index));
     const chip = html("span", `pchip ${teamOf(m[1])}`);
-    chip.textContent = playerLabel(m[1]);
+    chip.textContent = playerLabel(m[1], grade);
     parent.append(chip);
     last = m.index! + m[0].length;
   }
@@ -89,11 +89,11 @@ function drawField(g: SVGGElement, uid: string, mini: boolean) {
   // 攻める方向: 左の余白に大きな矢印、上下にゴールの名前
   svg("path", { d: "M-2.6,6 L-0.6,10.5 L-1.8,10.5 L-1.8,62 L-3.4,62 L-3.4,10.5 L-4.6,10.5 Z", class: "dir-arrow" }, g);
   const dirText = svg("text", { x: -2.6, y: 36, class: "dir-text", "text-anchor": "middle", "dominant-baseline": "central" }, g);
-  dirText.textContent = "せめる ほうこう";
+  dirText.textContent = "せめる方向";
   const top = svg("text", { x: 25, y: -3.6, class: "goal-label", "text-anchor": "middle", "dominant-baseline": "central" }, g);
-  top.textContent = "▲ あいての ゴール";
+  top.textContent = "▲ 相手のゴール";
   const bottom = svg("text", { x: 25, y: 71.6, class: "goal-label", "text-anchor": "middle", "dominant-baseline": "central" }, g);
-  bottom.textContent = "じぶんの ゴール";
+  bottom.textContent = "自分のゴール";
 }
 
 export interface StageOptions {
@@ -107,6 +107,7 @@ export interface StageOptions {
 export class Stage {
   readonly el: HTMLElement;
   readonly variant: Variant;
+  private readonly grade: Grade;
   private readonly mini: boolean;
   private readonly ghost?: Variant;
   private readonly svgEl: SVGSVGElement;
@@ -125,6 +126,7 @@ export class Stage {
 
   constructor(scenario: Scenario, readonly key: VariantKey, opts: StageOptions = {}) {
     this.variant = scenario.variants[key];
+    this.grade = scenario.targetGrade;
     this.mini = !!opts.mini;
     this.ghost = opts.ghost;
     this.el = html("section", `stage stage-${key}${this.mini ? " stage-mini" : ""}`);
@@ -212,7 +214,7 @@ export class Stage {
 
   /** 読み上げ用の文 */
   spokenText(i: number) {
-    return plainText(this.variant.steps[i].explanation);
+    return plainText(this.variant.steps[i].explanation, this.grade);
   }
 
   durationOf(i: number) {
@@ -223,7 +225,7 @@ export class Stage {
     this.captionStep = i;
     const step = this.variant.steps[i];
     this.captionTitle.textContent = `${i + 1}. ${step.title}`;
-    renderRichText(step.explanation, this.captionText);
+    renderRichText(step.explanation, this.captionText, this.grade);
   }
 
   private focusOf(step: Step): PlayerId[] {
