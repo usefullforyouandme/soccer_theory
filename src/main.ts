@@ -310,6 +310,10 @@ function renderViewer(s: Scenario) {
 
   function setMode(m: Mode) {
     mode = m;
+    // お手本・ミス・比較を切りかえたら、必ず「1. はじまり」から見直す(途中のステップのまま切りかわると流れが分からなくなる)
+    playing = false;
+    speech.stop();
+    pos = 0;
     const keys: VariantKey[] = m === "compare" ? ["good", "bad"] : [m];
     stages = keys.map((k, idx) => new Stage(s, k, {
       live: idx === 0,
