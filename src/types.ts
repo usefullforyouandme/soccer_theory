@@ -5,6 +5,9 @@ export type Phase = "initial" | "movement" | "firstPlay" | "nextPlay" | "outcome
 export type BallMotion = "hold" | "dribble" | "ground" | "air" | "steal" | "shot";
 export type Judgement = "good" | "bad";
 export type Grade = "low" | "middle" | "high";
+/** 結末の種類: チャンス(緑)/ ピンチ(赤)/ 残念(灰。チャンスを逃した・相手ボールになった) */
+export type OutcomeTone = "chance" | "pinch" | "miss";
+export type GoalSide = "home" | "away";
 
 export interface Point {
   x: number;
@@ -14,6 +17,8 @@ export interface Point {
 export interface Ball extends Point {
   owner: PlayerId | null;
   motion: BallMotion;
+  /** このパスはオフサイド(ミスとして見せるために意図したもの)。ground/air のときだけ */
+  offside?: boolean;
 }
 
 /** from/to を省略すると、選手(またはボール)の前ステップ位置 → 現ステップ位置から自動で描く */
@@ -53,7 +58,32 @@ export interface CalloutOverlay {
   tone: Judgement;
 }
 
-export type Overlay = ArrowOverlay | PassLaneOverlay | SpaceOverlay | TriangleOverlay | CalloutOverlay;
+/** オフサイドライン(守っているチームの後ろから2人目、またはボールの位置。選手の動きに追従) */
+export interface OffsideLineOverlay {
+  type: "offsideLine";
+  /** 守っているチーム */
+  defending: GoalSide;
+}
+
+/** シュートコース(ボールまたは選手と、ゴールの両ポストを結ぶ三角形) */
+export interface ShotConeOverlay {
+  type: "shotCone";
+  from: PlayerId | "ball";
+  /** ねらうゴール: away = 相手のゴール(Y=0)、home = 自分のゴール(Y=68) */
+  goal: GoalSide;
+  /** 三角形の真ん中の線(キーパーが立つ目安)を描く */
+  centerLine?: boolean;
+  label?: string;
+}
+
+export type Overlay =
+  | ArrowOverlay
+  | PassLaneOverlay
+  | SpaceOverlay
+  | TriangleOverlay
+  | CalloutOverlay
+  | OffsideLineOverlay
+  | ShotConeOverlay;
 
 export interface Step {
   phase: Phase;
@@ -71,6 +101,8 @@ export interface Step {
 export interface Variant {
   label: string;
   outcomeBanner: string;
+  /** 省略時は good = chance、bad = pinch */
+  outcomeTone?: OutcomeTone;
   steps: Step[];
 }
 

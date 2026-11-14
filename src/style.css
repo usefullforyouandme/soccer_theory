@@ -620,11 +620,11 @@ summary:focus-visible {
   stroke-width: 0.4;
 }
 
-.banner-bg.good {
+.banner-bg.chance {
   fill: rgba(27, 138, 58, 0.94);
 }
 
-.banner-bg.bad {
+.banner-bg.pinch {
   fill: rgba(209, 52, 47, 0.94);
 }
 
@@ -1029,4 +1029,48 @@ summary:focus-visible {
 
 .mode-compare + .dock .info-text {
   font-size: 19px;
+}
+
+/* 結末「残念」(チャンスを逃した・相手ボールになった) */
+.banner-bg.miss {
+  fill: rgba(96, 105, 118, 0.94);
+}
+
+/* オフサイドライン(守備側の後ろから2人目に追従) */
+.ov-offside {
+  stroke: #ffe14d;
+  stroke-width: 0.3;
+  stroke-dasharray: 1.4 0.7;
+}
+
+.ov-offside-label {
+  fill: #ffe14d;
+  font-size: 1.5px;
+  font-weight: 800;
+  stroke: #1d3b1f;
+  stroke-width: 0.4px;
+  paint-order: stroke;
+}
+
+/* シュートコース(ボールと両ゴールポストを結ぶ三角形) */
+.ov-cone {
+  fill: rgba(255, 90, 90, 0.22);
+  stroke: rgba(255, 150, 150, 0.95);
+  stroke-width: 0.2;
+  stroke-linejoin: round;
+}
+
+.ov-cone-center {
+  stroke: #fff;
+  stroke-width: 0.25;
+  stroke-dasharray: 0.5 0.4;
+}
+
+.ov-cone-label {
+  fill: #fff;
+  font-size: 1.6px;
+  font-weight: 800;
+  stroke: #5a1f1f;
+  stroke-width: 0.4px;
+  paint-order: stroke;
 }

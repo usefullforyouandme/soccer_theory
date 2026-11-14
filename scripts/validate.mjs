@@ -82,6 +82,9 @@ function checkLogic(s, file) {
   for (const [vName, v] of Object.entries(s.variants)) {
     checkText(`${vName}.label`, v.label);
     checkText(`${vName}.outcomeBanner`, v.outcomeBanner);
+    if (vName === "good" && v.outcomeTone && v.outcomeTone !== "chance") warn(`${vName}.outcomeTone`, "お手本の結末は chance にしてください");
+    if (vName === "bad" && v.outcomeTone === "chance") warn(`${vName}.outcomeTone`, "よくあるミスの結末は pinch か miss にしてください");
+    if (v.steps.slice(1).some((st) => st.ball.offside) && vName === "good") warn(`${vName}`, "お手本にオフサイドのパスがあります");
 
     v.steps.forEach((st, i) => {
       const at = `${vName}.steps[${i}]`;
@@ -114,6 +117,7 @@ function checkLogic(s, file) {
         if (d > BALL_OWNER_MAX_DIST) err(`${at}.ball`, `ボールが ${ball.owner} から ${d.toFixed(1)}m 離れています`);
       }
       if (i === 0 && ball.motion !== "hold") err(`${at}.ball`, "Step 1 の motion は hold にしてください");
+      if (i === 0 && ball.offside) err(`${at}.ball`, "Step 1 に offside: true は付けられません");
 
       const prev = i > 0 ? v.steps[i - 1] : null;
 
@@ -146,10 +150,13 @@ function checkLogic(s, file) {
           if (sideOf(prev.ball.owner) !== sideOf(ball.owner)) {
             err(`${at}.ball`, "相手へのパスは steal を使ってください");
           } else {
+            // オフサイドは原則エラー。ミスとして見せる場合だけ ball.offside: true で明示する
             const off = offside(ball.owner, prev);
-            if (off) err(`${at}.ball`, off);
+            if (off && !ball.offside) err(`${at}.ball`, `${off}(意図したものなら ball.offside: true を付けてください)`);
+            if (!off && ball.offside) err(`${at}.ball`, `offside: true ですが、${ball.owner} はオフサイドの位置にいません`);
           }
         }
+        if (ball.offside && !["ground", "air"].includes(ball.motion)) err(`${at}.ball`, "offside: true は motion が ground/air のパスだけに付けてください");
       }
 
       // オーバーレイの参照と整合
@@ -158,7 +165,8 @@ function checkLogic(s, file) {
         const refs = o.type === "arrow" ? [o.by]
           : o.type === "passLane" ? [o.from, o.to]
           : o.type === "triangle" ? o.players
-          : o.type === "callout" ? [o.player] : [];
+          : o.type === "callout" ? [o.player]
+          : o.type === "shotCone" && o.from !== "ball" ? [o.from] : [];
         for (const id of refs) if (!isPlayer(id)) err(oat, `存在しない選手 ${id} を参照しています`);
         if (o.type === "triangle" && new Set(o.players.map(sideOf)).size > 1) {
           err(oat, "トライアングルは同じチームの3人で作ってください");
@@ -168,6 +176,7 @@ function checkLogic(s, file) {
         }
         if (o.type === "space" && o.label) checkText(`${oat}.label`, o.label);
         if (o.type === "callout") checkText(`${oat}.text`, o.text);
+        if (o.type === "shotCone" && o.label) checkText(`${oat}.label`, o.label);
         if (o.type === "arrow" && prev && isPlayer(o.by)) checkArrow(o, prev, st, oat);
       });
     });

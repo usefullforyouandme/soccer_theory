@@ -233,6 +233,14 @@
           "minLength": 1,
           "maxLength": 16
         },
+        "outcomeTone": {
+          "description": "結末の種類。chance=チャンス(緑)、pinch=ピンチ(赤)、miss=残念(灰。チャンスを逃した・相手ボールになった)。省略時は good=chance、bad=pinch",
+          "enum": [
+            "chance",
+            "pinch",
+            "miss"
+          ]
+        },
         "steps": {
           "type": "array",
           "minItems": 5,
@@ -337,6 +345,10 @@
                 "steal",
                 "shot"
               ]
+            },
+            "offside": {
+              "description": "このパスはオフサイド(ミスとして見せるために意図したもの)。motion が ground/air のときだけ使う",
+              "type": "boolean"
             }
           }
         },
@@ -358,6 +370,12 @@
               },
               {
                 "$ref": "#/$defs/callout"
+              },
+              {
+                "$ref": "#/$defs/offsideLine"
+              },
+              {
+                "$ref": "#/$defs/shotCone"
               }
             ]
           }
@@ -518,6 +536,68 @@
             "good",
             "bad"
           ]
+        }
+      }
+    },
+    "goalSide": {
+      "description": "away = 相手のゴール(Y=0)側、home = 自分のゴール(Y=68)側",
+      "enum": [
+        "home",
+        "away"
+      ]
+    },
+    "offsideLine": {
+      "description": "オフサイドライン。守っているチームの後ろから2人目(またはボール)の位置に横線を引く。選手の動きに追従する",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "defending"
+      ],
+      "properties": {
+        "type": {
+          "const": "offsideLine"
+        },
+        "defending": {
+          "$ref": "#/$defs/goalSide",
+          "description": "守っているチーム"
+        }
+      }
+    },
+    "shotCone": {
+      "description": "シュートコース。ボールまたは選手と、ゴールの両ポストを結ぶ三角形",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "from",
+        "goal"
+      ],
+      "properties": {
+        "type": {
+          "const": "shotCone"
+        },
+        "from": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/playerId"
+            },
+            {
+              "const": "ball"
+            }
+          ]
+        },
+        "goal": {
+          "$ref": "#/$defs/goalSide",
+          "description": "ねらうゴール"
+        },
+        "centerLine": {
+          "description": "三角形の真ん中の線(キーパーが立つ目安)を描く",
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 12
         }
       }
     }

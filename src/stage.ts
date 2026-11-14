@@ -1,5 +1,7 @@
 // 1パターン(おてほん/ミス)分のピッチ描画。時間の管理は main.ts が行い、ここは「ステップ i の進捗 t」の1コマを描く
-import type { ArrowOverlay, Ball, Grade, Overlay, PlayerId, Point, Scenario, Step, Variant, VariantKey } from "./types";
+import type {
+  ArrowOverlay, Ball, GoalSide, Grade, OutcomeTone, Overlay, PlayerId, Point, Scenario, ShotConeOverlay, Step, Variant, VariantKey,
+} from "./types";
 
 const NS = "http://www.w3.org/2000/svg";
 const PLAYER_R = 1.5;
@@ -8,6 +10,8 @@ const BALL_GAP = PLAYER_R + BALL_R * 0.9; // 保持中のボールは選手の�
 const GHOST_MIN_DIST = 4; // 比較表示で「おてほんの位置」を出す最小のずれ(m)
 const BANNER = { x: 3, w: 44, h: 9 }; // 結末バナーの横位置・大きさ(縦位置は空いている所を探す)
 const GOAL_X = [22.5, 27.5] as const;
+const GOAL_LINE_Y: Record<GoalSide, number> = { away: 0, home: 68 };
+const BANNER_SUB: Record<OutcomeTone, string> = { chance: "◎ チャンス!", pinch: "× ピンチ!", miss: "△ 残念…" };
 const TOKEN = /\{([ha][1-9][0-9]?)\}/g;
 let stageSeq = 0;
 
@@ -60,6 +64,7 @@ const inGoal = (p: Point) => p.x >= GOAL_X[0] && p.x <= GOAL_X[1] && (p.y <= 0.5
 /** 1コマ分の状態(ステップ中に毎フレーム変わるもの) */
 interface Frame {
   pos: Record<PlayerId, Point>;
+  ball: Point;
   e: number;
 }
 
@@ -231,7 +236,7 @@ export class Stage {
     }
 
     if (this.builtStep !== i) this.buildStep(i, cur, prev, focus);
-    const frame: Frame = { pos, e };
+    const frame: Frame = { pos, ball: b, e };
     for (const update of this.updaters) update(frame);
     const opacity = String(i === 0 ? 1 : clamp01(t / 0.2));
     this.overlayLayer.style.opacity = opacity;
@@ -356,7 +361,7 @@ export class Stage {
   private buildOverlays(i: number, cur: Step, prev: Step) {
     const layer = this.overlayLayer;
     // 面 → 線 → 矢印 → 吹き出し の順に重ねる
-    const order: Overlay["type"][] = ["space", "triangle", "passLane", "arrow", "callout"];
+    const order: Overlay["type"][] = ["shotCone", "space", "triangle", "offsideLine", "passLane", "arrow", "callout"];
     const sorted = [...cur.overlays].sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
     for (const o of sorted) {
       switch (o.type) {
@@ -386,8 +391,61 @@ export class Stage {
         case "callout":
           if (!this.mini) this.buildCallout(o.player, o.text, o.tone);
           break;
+        case "offsideLine":
+          this.buildOffsideLine(o.defending);
+          break;
+        case "shotCone":
+          this.buildShotCone(o);
+          break;
       }
     }
+    // オフサイドのパス: 受けた瞬間に笛の吹き出しを出す
+    const receiver = cur.ball.offside ? cur.ball.owner : null;
+    if (receiver && i > 0 && !this.mini) {
+      const g = this.buildCallout(receiver, "オフサイド!", "bad");
+      this.updaters.push(({ e }) => show(g, e >= 0.999));
+    }
+  }
+
+  /**
+   * オフサイドライン: 守備側の後ろから2人目とボールのうち、守備側のゴールに近い方。
+   * 攻撃側の自陣ではオフサイドにならないので、ハーフウェーラインより手前には来ない。選手の動きに追従する
+   */
+  private buildOffsideLine(defending: GoalSide) {
+    const ids = [...this.players.keys()].filter((id) => teamOf(id) === defending);
+    const line = svg("line", { x1: 0, x2: 50, class: "ov-offside" }, this.overlayLayer);
+    const text = this.mini ? null : this.label("オフサイドライン", 49.4, 0, "ov-offside-label");
+    text?.setAttribute("text-anchor", "end");
+    this.updaters.push(({ pos, ball }) => {
+      const toward = (y: number) => (defending === "away" ? -y : y); // 大きいほど守備側のゴールに近い
+      const second = ids.map((id) => pos[id].y).sort((a, b) => toward(b) - toward(a))[1];
+      const y = [second, ball.y, 34].reduce((a, b) => (toward(a) > toward(b) ? a : b));
+      setAttrs(line, { y1: y, y2: y });
+      if (text) setAttrs(text, { y: defending === "away" ? y - 1.1 : y + 1.1 });
+    });
+  }
+
+  /** シュートコース: ボール(または選手)と両ゴールポストを結ぶ三角形。centerLine はその真ん中の線(キーパーの立つ目安) */
+  private buildShotCone(o: ShotConeOverlay) {
+    const gy = GOAL_LINE_Y[o.goal];
+    const p1 = { x: GOAL_X[0], y: gy };
+    const p2 = { x: GOAL_X[1], y: gy };
+    const poly = svg("polygon", { class: "ov-cone" }, this.overlayLayer);
+    const center = o.centerLine ? svg("line", { class: "ov-cone-center" }, this.overlayLayer) : null;
+    const text = o.label && !this.mini ? this.label(o.label, 0, 0, "ov-cone-label") : null;
+    this.updaters.push(({ pos, ball }) => {
+      const f = o.from === "ball" ? ball : pos[o.from];
+      poly.setAttribute("points", `${f.x},${f.y} ${p1.x},${p1.y} ${p2.x},${p2.y}`);
+      if (center) {
+        // 2本の辺の向きを足すと、角を2等分する向きになる
+        const u1 = unit({ x: p1.x - f.x, y: p1.y - f.y });
+        const u2 = unit({ x: p2.x - f.x, y: p2.y - f.y });
+        const d = unit({ x: u1.x + u2.x, y: u1.y + u2.y });
+        const k = Math.abs(d.y) > 1e-6 ? (gy - f.y) / d.y : 0;
+        setAttrs(center, { x1: f.x, y1: f.y, x2: f.x + d.x * k, y2: gy });
+      }
+      if (text) setAttrs(text, { x: (f.x + p1.x + p2.x) / 3, y: (f.y + p1.y + p2.y) / 3 });
+    });
   }
 
   private drawArrow(o: ArrowOverlay, prev: Step, cur: Step) {
@@ -418,7 +476,7 @@ export class Stage {
   }
 
   /** 選手の頭上の吹き出し。選手について動き、ピッチの外にはみ出さないよう位置を調整 */
-  private buildCallout(player: PlayerId, text: string, tone: "good" | "bad") {
+  private buildCallout(player: PlayerId, text: string, tone: "good" | "bad"): SVGGElement {
     const w = [...text].length * 1.75 + 1.6;
     const h = 2.9;
     const g = svg("g", { class: `callout ${tone}` }, this.labelLayer);
@@ -437,6 +495,7 @@ export class Stage {
       setAttrs(bg, { x: cx - w / 2, y: cy - h / 2 });
       setAttrs(t, { x: cx, y: cy });
     });
+    return g;
   }
 
   private label(text: string, x: number, y: number, className = "ov-label") {
@@ -484,12 +543,12 @@ export class Stage {
       return;
     }
     if (layer.childElementCount) return;
-    const good = this.key === "good";
+    const tone: OutcomeTone = this.variant.outcomeTone ?? (this.key === "good" ? "chance" : "pinch");
     const top = this.bannerTop(pos, ball, owner, focus);
     layer.classList.toggle("delayed", delayed);
-    svg("rect", { x: BANNER.x, y: top, width: BANNER.w, height: BANNER.h, rx: 2.2, class: `banner-bg ${this.key}` }, layer);
+    svg("rect", { x: BANNER.x, y: top, width: BANNER.w, height: BANNER.h, rx: 2.2, class: `banner-bg ${tone}` }, layer);
     const sub = svg("text", { x: 25, y: top + 2.5, class: "banner-sub", "text-anchor": "middle", "dominant-baseline": "central" }, layer);
-    sub.textContent = good ? "◎ チャンス!" : "× ピンチ!";
+    sub.textContent = BANNER_SUB[tone];
     const text = this.variant.outcomeBanner;
     const main = svg("text", { x: 25, y: top + 6.3, class: "banner-main", "text-anchor": "middle", "dominant-baseline": "central" }, layer);
     main.style.fontSize = String(Math.min(3.6, 38 / [...text].length));
