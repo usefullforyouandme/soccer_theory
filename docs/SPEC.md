@@ -163,7 +163,8 @@ soccer_theory/
 ├── docs/
 │   ├── SPEC.md               # 本仕様書
 │   ├── scenario-prompt.md    # シナリオ生成用プロンプト(LLM 向け)
-│   └── REVIEW_FINDINGS.md    # レビュー指摘と対応状況
+│   ├── REVIEW_FINDINGS.md    # レビュー指摘と対応状況
+│   └── SCENARIO_CATALOG.md   # シナリオの設計図(種類・数・内容の精査結果)
 ├── index.html                # エントリ(CSP 設定)
 ├── src/
 │   ├── main.ts               # 一覧・再生画面・時間管理(再生/一時停止/シーク)・読み上げ・ルーティング
@@ -190,5 +191,5 @@ soccer_theory/
 - [x] ビューアの実装(Vite + TypeScript + SVG)
 - [x] GitHub Pages への自動デプロイ
 - [x] 学習の流れ(問いかけ → 動き → まとめ)、読み上げ
-- [ ] シナリオの追加(守備の切り替え、ビルドアップ、カバーリング、ゴール前の守り方)
+- [ ] シナリオの追加(`docs/SCENARIO_CATALOG.md` の第 1〜3 弾、計 17 本)
 - [ ] レビュー指摘(重要度「低」)の対応

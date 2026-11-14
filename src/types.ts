@@ -86,12 +86,21 @@ export interface Team {
   players: TeamPlayer[];
 }
 
+export interface Drill {
+  title: string;
+  description: string;
+}
+
 export interface Scenario {
   schemaVersion: 2;
   id: string;
   title: string;
   theme: string;
   coachNote?: string;
+  /** 指導者がピッチで子どもに掛ける短い言葉(指導者向け欄に表示) */
+  coachCue?: string;
+  /** 関連する練習メニュー(指導者向け欄に表示) */
+  drills?: Drill[];
   targetGrade: Grade;
   /** Step 1 のあとに出す問いかけ(予想させる) */
   question: string;

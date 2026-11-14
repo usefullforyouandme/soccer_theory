@@ -172,6 +172,16 @@ function renderViewer(s: Scenario) {
   note.append(h("summary", "", "保護者・指導者の方へ(指導メモ)"), h("p", "note-theme", `テーマ: ${s.theme}`));
   if (s.coachNote) note.append(h("p", "", s.coachNote));
   note.append(h("p", "note-point", `今日のポイント: ${plainText(s.keyPoint, s.targetGrade)}`));
+  if (s.coachCue) note.append(h("p", "note-cue", `声かけの例: 「${s.coachCue}」`));
+  if (s.drills?.length) {
+    const list = h("ul", "note-drills");
+    for (const d of s.drills) {
+      const li = h("li");
+      li.append(h("strong", "", d.title), h("span", "", d.description));
+      list.append(li);
+    }
+    note.append(h("p", "note-head", "関連する練習"), list);
+  }
 
   page.append(top, tabs, stageArea, dock, note);
   app.replaceChildren(page);

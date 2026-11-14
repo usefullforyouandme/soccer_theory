@@ -67,7 +67,7 @@ summary:focus-visible {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -429,6 +429,25 @@ summary:focus-visible {
   cursor: pointer;
   min-height: 32px;
   font-weight: 700;
+}
+
+.coach-note .note-cue,
+.coach-note .note-head {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.note-drills {
+  margin: 0 0 8px;
+  padding-left: 1.4em;
+}
+
+.note-drills li + li {
+  margin-top: 6px;
+}
+
+.note-drills strong {
+  display: block;
 }
 
 /* ---------- ピッチ(SVG) ---------- */

@@ -13,6 +13,7 @@ v0.4:対象を小学4年生に変更(4年生までに習う漢字で表記)。�
 - [シナリオ生成プロンプト](docs/scenario-prompt.md)
 - [シナリオ JSON Schema](schema/scenario.schema.json)
 - [レビュー指摘一覧(修正予定)](docs/REVIEW_FINDINGS.md)
+- [シナリオカタログ(案)](docs/SCENARIO_CATALOG.md)
 
 ## 開発
 ```bash
