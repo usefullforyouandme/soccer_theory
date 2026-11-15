@@ -32,6 +32,8 @@ export const callout = (player, text, tone) => ({ type: "callout", player, text,
 export const lane = (from, to, state = "open") => ({ type: "passLane", from, to, state });
 export const tri = (...p) => ({ type: "triangle", players: p });
 export const offsideLine = (defending = "away") => ({ type: "offsideLine", defending });
+export const look = (player, at, judgement) => ({ type: "look", player, at: typeof at === "string" && at.includes(",") ? pt(at) : at, ...(judgement ? { judgement } : {}) });
+export const shotCone = (from, goal, extra = {}) => ({ type: "shotCone", from, goal, ...extra });
 export const ball = (c, owner, motion, extra = {}) => ({ ...pt(c), owner, motion, ...extra });
 
 function variant(v) {

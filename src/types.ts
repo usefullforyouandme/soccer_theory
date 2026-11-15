@@ -78,6 +78,16 @@ export interface ShotConeOverlay {
   label?: string;
 }
 
+/** 選手が見た方向(視野)の扇形。そのステップの間は選手の向きもこの方向になる */
+export interface LookOverlay {
+  type: "look";
+  player: PlayerId;
+  /** 見る先: 選手、ボール、または座標 */
+  at: PlayerId | "ball" | Point;
+  /** good = 周りを見ている(省略時)/ bad = ボールだけを見ている */
+  judgement?: Judgement;
+}
+
 export type Overlay =
   | ArrowOverlay
   | PassLaneOverlay
@@ -85,7 +95,8 @@ export type Overlay =
   | TriangleOverlay
   | CalloutOverlay
   | OffsideLineOverlay
-  | ShotConeOverlay;
+  | ShotConeOverlay
+  | LookOverlay;
 
 export interface Step {
   phase: Phase;

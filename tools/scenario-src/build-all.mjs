@@ -26,6 +26,11 @@ const ORDER = [
   "w3-restart.mjs",
   "w3-box-entry-right.mjs",
   "w4-box-entry-byline.mjs",
+  "w5-scan-before.mjs",
+  "w5-two-v-one.mjs",
+  "w5-delay-outnumbered.mjs",
+  "w5-tuck-in.mjs",
+  "w5-corner-attack.mjs",
 ];
 
 const check = process.argv.includes("--check");

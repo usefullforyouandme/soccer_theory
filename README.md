@@ -6,7 +6,7 @@
 公開ページ: https://usefullforyouandme.github.io/soccer_theory/
 
 ## ステータス
-v0.9:カタログの全パターンを作成し、18 テーマ・シナリオ 40 本
+v1.0:「見た方向」の表示と第 5 弾を追加し、23 テーマ・シナリオ 50 本
 
 ## ドキュメント
 - [仕様書](docs/SPEC.md)

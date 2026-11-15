@@ -167,7 +167,8 @@ function checkLogic(s, file) {
           : o.type === "passLane" ? [o.from, o.to]
           : o.type === "triangle" ? o.players
           : o.type === "callout" ? [o.player]
-          : o.type === "shotCone" && o.from !== "ball" ? [o.from] : [];
+          : o.type === "shotCone" && o.from !== "ball" ? [o.from]
+          : o.type === "look" ? [o.player, ...(typeof o.at === "string" && o.at !== "ball" ? [o.at] : [])] : [];
         for (const id of refs) if (!isPlayer(id)) err(oat, `存在しない選手 ${id} を参照しています`);
         if (o.type === "triangle" && new Set(o.players.map(sideOf)).size > 1) {
           err(oat, "トライアングルは同じチームの3人で作ってください");
@@ -178,6 +179,11 @@ function checkLogic(s, file) {
         if (o.type === "space" && o.label) checkText(`${oat}.label`, o.label);
         if (o.type === "callout") checkText(`${oat}.text`, o.text);
         if (o.type === "shotCone" && o.label) checkText(`${oat}.label`, o.label);
+        if (o.type === "look" && isPlayer(o.player)) {
+          const target = o.at === "ball" ? st.ball : typeof o.at === "string" ? st.players[o.at] : o.at;
+          if (o.at === o.player) err(oat, "自分自身を見る先にはできません");
+          else if (target && dist(target, st.players[o.player]) < 2) warn(oat, `見る先が ${o.player} に近すぎて、向きが分かりません`);
+        }
         if (o.type === "arrow" && prev && isPlayer(o.by)) checkArrow(o, prev, st, oat);
       });
     });

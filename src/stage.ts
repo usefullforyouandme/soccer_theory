@@ -1,6 +1,6 @@
 // 1パターン(おてほん/ミス)分のピッチ描画。時間の管理は main.ts が行い、ここは「ステップ i の進捗 t」の1コマを描く
 import type {
-  ArrowOverlay, Ball, GoalSide, Grade, OutcomeTone, Overlay, PlayerId, Point, Scenario, ShotConeOverlay, Step, Variant, VariantKey,
+  ArrowOverlay, Ball, GoalSide, Grade, LookOverlay, OutcomeTone, Overlay, PlayerId, Point, Scenario, ShotConeOverlay, Step, Variant, VariantKey,
 } from "./types";
 
 const NS = "http://www.w3.org/2000/svg";
@@ -361,7 +361,7 @@ export class Stage {
   private buildOverlays(i: number, cur: Step, prev: Step) {
     const layer = this.overlayLayer;
     // 面 → 線 → 矢印 → 吹き出し の順に重ねる
-    const order: Overlay["type"][] = ["shotCone", "space", "triangle", "offsideLine", "passLane", "arrow", "callout"];
+    const order: Overlay["type"][] = ["look", "shotCone", "space", "triangle", "offsideLine", "passLane", "arrow", "callout"];
     const sorted = [...cur.overlays].sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
     for (const o of sorted) {
       switch (o.type) {
@@ -396,6 +396,9 @@ export class Stage {
           break;
         case "shotCone":
           this.buildShotCone(o);
+          break;
+        case "look":
+          this.buildLook(o);
           break;
       }
     }
@@ -432,6 +435,26 @@ export class Stage {
       return;
     }
     this.updaters.push(({ pos, ball }) => place(lineY(pos, ball.y)));
+  }
+
+  /**
+   * 見た方向(視野): 選手から見る先へ向けた扇形。good は広い扇形(周りを見ている)、bad はせまい赤い扇形(ボールだけ)。
+   * そのステップの間は、選手の向き(三角)も見る先へ向ける
+   */
+  private buildLook(o: LookOverlay) {
+    const bad = o.judgement === "bad";
+    const half = ((bad ? 13 : 32) * Math.PI) / 180;
+    const fan = svg("path", { class: `ov-look ${bad ? "bad" : "good"}` }, this.overlayLayer);
+    const nose = this.players.get(o.player)?.nose;
+    this.updaters.push(({ pos, ball }) => {
+      const p = pos[o.player];
+      const target = o.at === "ball" ? ball : typeof o.at === "string" ? pos[o.at] : o.at;
+      const a = Math.atan2(target.y - p.y, target.x - p.x);
+      const r = Math.min(14, Math.max(9, dist(p, target)));
+      const at = (ang: number) => `${p.x + Math.cos(ang) * r},${p.y + Math.sin(ang) * r}`;
+      fan.setAttribute("d", `M${p.x},${p.y} L${at(a - half)} A${r},${r} 0 0 1 ${at(a + half)} Z`);
+      nose?.setAttribute("transform", `rotate(${((a * 180) / Math.PI + 90).toFixed(1)})`);
+    });
   }
 
   /** シュートコース: ボール(または選手)と両ゴールポストを結ぶ三角形。centerLine はその真ん中の線(キーパーの立つ目安) */

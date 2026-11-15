@@ -41,6 +41,7 @@
 - 説明文で触れない補助線(passLane など)は描かない。
 - 結末: お手本は `outcomeTone: "chance"`。ミスは失点の危機なら `"pinch"`、チャンスを逃す・相手ボールになるだけなら `"miss"`(△ 残念…)にする。無理にピンチを作らない。
 - オフサイドを見せる場合は、そのパスのステップの `ball` に `"offside": true` を付け、`{ "type": "offsideLine", "defending": "away" }` でオフサイドラインを表示する。オフサイドかどうかは**パスが出た瞬間(前ステップの終わり)の位置**で決まる。明示しないオフサイドは不可。
+- 「周りを見る」ことを見せる場合は `{ "type": "look", "player": "h6", "at": "a8" }` で見た方向を扇形で描く(`at` は選手 ID・`"ball"`・座標)。ボールだけを見ているミスは `{ "type": "look", "player": "h6", "at": "ball", "judgement": "bad" }`。
 - シュートコースを見せる場合は `{ "type": "shotCone", "from": "ball", "goal": "home", "centerLine": true }` のように描く(キーパーの立ち位置の説明などに使う)。
 
 # ステップ構成(全5ステップ、good / bad とも同じ phase 構成)

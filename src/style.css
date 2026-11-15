@@ -1053,6 +1053,23 @@ summary:focus-visible {
 }
 
 /* シュートコース(ボールと両ゴールポストを結ぶ三角形) */
+/* 見た方向(視野)。good = 周りを見ている(広い)、bad = ボールだけ(せまい赤) */
+.ov-look {
+  stroke-width: 0.25;
+  stroke-dasharray: 0.8 0.5;
+  stroke-linejoin: round;
+}
+
+.ov-look.good {
+  fill: rgba(255, 244, 160, 0.32);
+  stroke: #fff3a0;
+}
+
+.ov-look.bad {
+  fill: rgba(255, 59, 48, 0.28);
+  stroke: #ff6b63;
+}
+
 .ov-cone {
   fill: rgba(255, 70, 70, 0.2);
   stroke: #ff8a8a;

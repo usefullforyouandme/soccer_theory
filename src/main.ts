@@ -204,8 +204,11 @@ function renderViewer(s: Scenario) {
     <span class="lg"><svg viewBox="0 0 24 8" aria-hidden="true"><line x1="1" y1="4" x2="18" y2="4" stroke="#ffd400" stroke-width="2.6"/><path d="M17,0 L23,4 L17,8z" fill="#ffd400"/></svg>パス</span>
     <span class="lg"><svg viewBox="0 0 24 8" aria-hidden="true"><line x1="2" y1="4" x2="18" y2="4" stroke="#fff3b0" stroke-width="2.6" stroke-dasharray="0.1 4" stroke-linecap="round"/><path d="M17,0 L23,4 L17,8z" fill="#fff3b0"/></svg>ドリブル</span>
     <span class="lg"><svg viewBox="0 0 24 8" aria-hidden="true"><line x1="1" y1="4" x2="18" y2="4" stroke="#ff3b30" stroke-width="2" stroke-dasharray="4 3"/><path d="M17,0 L23,4 L17,8z" fill="#ff3b30"/></svg>ミスの動き</span>
+    <span class="lg lg-look" hidden><svg viewBox="0 0 24 12" aria-hidden="true"><path d="M2,6 L20,0.5 A12,12 0 0 1 20,11.5 Z" fill="rgba(255,244,160,0.6)" stroke="#c9b800" stroke-width="0.8" stroke-dasharray="1.6 1"/></svg>見た方向</span>
     <span class="lg lg-ghost" hidden><svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="none" stroke="#9cc3ff" stroke-width="1.2" stroke-dasharray="2 1.4"/></svg>お手本の位置</span>`;
   const ghostLegend = legend.querySelector<HTMLElement>(".lg-ghost")!;
+  // 見た方向(look)は使うシナリオのときだけ凡例に出す
+  legend.querySelector<HTMLElement>(".lg-look")!.hidden = !Object.values(s.variants).some((v) => v.steps.some((st) => st.overlays.some((o) => o.type === "look")));
 
   // 問いかけ・ステップ表示・時間バー・操作ボタン・凡例。1パターン表示ではピッチの横、比較表示ではピッチの下に置く
   const dock = h("div", "dock");

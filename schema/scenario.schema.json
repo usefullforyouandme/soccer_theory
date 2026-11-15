@@ -399,6 +399,9 @@
                 "$ref": "#/$defs/offsideLine"
               },
               {
+                "$ref": "#/$defs/look"
+              },
+              {
                 "$ref": "#/$defs/shotCone"
               }
             ]
@@ -585,6 +588,45 @@
         "defending": {
           "$ref": "#/$defs/goalSide",
           "description": "守っているチーム"
+        }
+      }
+    },
+    "look": {
+      "description": "選手が見た方向(視野)を扇形で描く。その選手の向き(三角)も、そのステップの間はこの方向を向く。good = 周りを見ている(広い扇形)、bad = ボールだけを見ている(せまい赤い扇形)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "player",
+        "at"
+      ],
+      "properties": {
+        "type": {
+          "const": "look"
+        },
+        "player": {
+          "$ref": "#/$defs/playerId"
+        },
+        "at": {
+          "description": "見る先: 選手ID、\"ball\"(ボール)、または座標",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/playerId"
+            },
+            {
+              "const": "ball"
+            },
+            {
+              "$ref": "#/$defs/point"
+            }
+          ]
+        },
+        "judgement": {
+          "description": "省略時は good",
+          "enum": [
+            "good",
+            "bad"
+          ]
         }
       }
     },
