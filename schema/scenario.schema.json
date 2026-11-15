@@ -395,6 +395,10 @@
             "offside": {
               "description": "このパスはオフサイド(ミスとして見せるために意図したもの)。motion が ground/air のときだけ使う",
               "type": "boolean"
+            },
+            "lofted": {
+              "description": "浮き球(クロスなど)をカットした。motion が steal のときだけ使う。air と同じく浮いて見せる",
+              "type": "boolean"
             }
           }
         },

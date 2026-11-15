@@ -1221,6 +1221,10 @@ summary:focus-visible {
   font-size: 13px;
 }
 
+.counterpart-text .counterpart-note {
+  color: #a35400;
+}
+
 .pattern-link.current {
   background: var(--ink);
   border-color: var(--ink);

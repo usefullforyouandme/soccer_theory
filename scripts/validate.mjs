@@ -158,6 +158,7 @@ function checkLogic(s, file) {
             if (!off && ball.offside) err(`${at}.ball`, `offside: true ですが、${ball.owner} はオフサイドの位置にいません`);
           }
         }
+        if (ball.lofted && ball.motion !== "steal") err(`${at}.ball`, "lofted: true は motion が steal のときだけ付けてください(パスが通る浮き球は air)");
         if (ball.offside && !["ground", "air"].includes(ball.motion)) err(`${at}.ball`, "offside: true は motion が ground/air のパスだけに付けてください");
       }
 

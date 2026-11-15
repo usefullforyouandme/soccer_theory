@@ -443,7 +443,8 @@
             "x": 24.8,
             "y": 4,
             "owner": "a1",
-            "motion": "steal"
+            "motion": "steal",
+            "lofted": true
           },
           "overlays": [
             {

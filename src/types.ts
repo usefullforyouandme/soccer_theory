@@ -21,6 +21,8 @@ export interface Ball extends Point {
   motion: BallMotion;
   /** このパスはオフサイド(ミスとして見せるために意図したもの)。ground/air のときだけ */
   offside?: boolean;
+  /** 浮き球を相手(または味方)がカットした。steal のときだけ。air と同じく浮いて見せる */
+  lofted?: boolean;
 }
 
 /** from/to を省略すると、選手(またはボール)の前ステップ位置 → 現ステップ位置から自動で描く */

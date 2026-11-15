@@ -239,7 +239,8 @@
             "x": 20.6,
             "y": 55.3,
             "owner": "h2",
-            "motion": "steal"
+            "motion": "steal",
+            "lofted": true
           },
           "overlays": [
             {

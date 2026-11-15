@@ -145,7 +145,12 @@ function renderViewer(s: Scenario) {
     const a = h("a", "counterpart-link");
     a.href = `#/s/${other.id}`;
     const text = h("span", "counterpart-text");
-    text.append(h("strong", "", s.counterpart!.label), h("small", "", `${other.title}(${other.pattern})`));
+    // 味方はいつも上へせめるので、反対側のシナリオではピッチが 180 度回った形になる
+    text.append(
+      h("strong", "", s.counterpart!.label),
+      h("small", "", `${other.title}(${other.pattern})`),
+      h("small", "counterpart-note", "味方はいつも上へせめるので、向きが反対になるよ"),
+    );
     a.append(h("span", "counterpart-icon", "⇄"), text);
     top.append(a);
   }

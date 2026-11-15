@@ -207,7 +207,7 @@
           "phase": "firstPlay",
           "title": "同時に走る",
           "explanation": "{h6}がパスを出すのと同時に、{h9}がななめに走り出した!",
-          "durationMs": 2000,
+          "durationMs": 2500,
           "players": {
             "h1": { "x": 25, "y": 58 },
             "h2": { "x": 12, "y": 41 },
@@ -418,7 +418,7 @@
           "phase": "firstPlay",
           "title": "オフサイド",
           "explanation": "{h6}が{h9}へパス。でもパスが出た時、{h9}は線より前にいた。",
-          "durationMs": 2000,
+          "durationMs": 2500,
           "players": {
             "h1": { "x": 25, "y": 58 },
             "h2": { "x": 12, "y": 41 },

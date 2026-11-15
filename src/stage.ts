@@ -217,7 +217,8 @@ export class Stage {
 
     // ボール
     const b = this.ballAt(prev, cur, pos, t, e);
-    const lift = cur.ball.motion === "air" && i > 0 ? Math.sin(Math.PI * this.ballProgress(cur.ball, t, e)) : 0;
+    const inAir = cur.ball.motion === "air" || (cur.ball.motion === "steal" && !!cur.ball.lofted);
+    const lift = inAir && i > 0 ? Math.sin(Math.PI * this.ballProgress(cur.ball, t, e)) : 0;
     this.ballShadow.setAttribute("cx", String(b.x + lift * 0.8));
     this.ballShadow.setAttribute("cy", String(b.y + lift * 1.2));
     this.ballShadow.style.opacity = String(0.35 * (1 - lift * 0.5));
