@@ -12,10 +12,11 @@ v1.1:「反対側から見る」を追加。23 テーマ・シナリオ 50 本(�
 - [仕様書](docs/SPEC.md)
 - [シナリオ生成プロンプト](docs/scenario-prompt.md)
 - [シナリオ JSON Schema](schema/scenario.schema.json)
-- [レビュー指摘一覧(修正予定)](docs/REVIEW_FINDINGS.md)
+- [レビュー指摘一覧(ビューア v0.2。対応済み)](docs/REVIEW_FINDINGS.md)
 - [シナリオカタログ](docs/SCENARIO_CATALOG.md)
 - [シナリオ作成スクリプト](tools/scenario-src/README.md)
 - [指導者目線のレビュー](docs/COACH_REVIEW.md)
+- [課題リスト(バックログ)](docs/BACKLOG.md)
 
 ## 開発
 ```bash
