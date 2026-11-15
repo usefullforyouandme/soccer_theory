@@ -18,6 +18,7 @@ v1.2: 第 2 回指導者レビューに対応。25 テーマ・シナリオ 58 �
 - [指導者目線のレビュー](docs/COACH_REVIEW.md)
 - [課題リスト(バックログ)](docs/BACKLOG.md)
 - [実機確認と試用の手順](docs/TRIAL_PLAN.md)
+- [トークン運用ルール(Claude Code での改修・シナリオ追加の進め方)](docs/TOKEN_OPERATIONS.md)
 
 ## 開発
 ```bash

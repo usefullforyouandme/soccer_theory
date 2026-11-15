@@ -203,7 +203,10 @@ soccer_theory/
 │   ├── COACH_REVIEW.md       # 指導者目線のレビュー(第 1 回・第 5 弾・第 2 回)
 │   ├── BACKLOG.md            # 課題リスト(今後の課題はここに一本化)
 │   ├── TRIAL_PLAN.md         # タブレット実機確認と、指導者・子どもによる試用の手順
+│   ├── TOKEN_OPERATIONS.md   # Claude Code で改修・シナリオ追加するときのトークン運用(区切り・読み方・手動事項)
 │   └── SCENARIO_CATALOG.md   # シナリオの設計図(種類・数・内容の精査結果)
+├── CLAUDE.md                 # Claude Code への短い指示(トークン運用の要点。毎セッション自動読込)
+├── .claude/                  # settings.json(フック定義)と hooks/*.sh。handoff.md・state/ は作業状態で Git 管理外
 ├── index.html                # エントリ(CSP 設定)
 ├── src/
 │   ├── main.ts               # 一覧・再生画面・時間管理(再生/一時停止/シーク)・読み上げ・ルーティング

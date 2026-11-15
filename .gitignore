@@ -24,3 +24,7 @@ npm-debug.log*
 # AI ツールのローカル設定
 .claude/settings.local.json
 .agents/*.local.json
+
+# トークン運用の作業状態(セッション間の引き継ぎ・圧縮ログ。機械ローカル)
+.claude/handoff.md
+.claude/state/
