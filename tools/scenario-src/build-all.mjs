@@ -25,6 +25,7 @@ const ORDER = [
   "w3-defend-transition.mjs",
   "w3-restart.mjs",
   "w3-box-entry-right.mjs",
+  "w4-box-entry-byline.mjs",
 ];
 
 const check = process.argv.includes("--check");
