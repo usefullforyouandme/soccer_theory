@@ -206,7 +206,7 @@ soccer_theory/
 │   ├── TOKEN_OPERATIONS.md   # Claude Code で改修・シナリオ追加するときのトークン運用(区切り・読み方・手動事項)
 │   └── SCENARIO_CATALOG.md   # シナリオの設計図(種類・数・内容の精査結果)
 ├── CLAUDE.md                 # Claude Code への短い指示(トークン運用の要点。毎セッション自動読込)
-├── .claude/                  # settings.json(フック定義)と hooks/*.sh。handoff.md・state/ は作業状態で Git 管理外
+├── .claude/handoff.md        # セッション間の引き継ぎ(Git 管理外。フック本体はユーザーレベル ~/.claude/hooks/)
 ├── index.html                # エントリ(CSP 設定)
 ├── src/
 │   ├── main.ts               # 一覧・再生画面・時間管理(再生/一時停止/シーク)・読み上げ・ルーティング
