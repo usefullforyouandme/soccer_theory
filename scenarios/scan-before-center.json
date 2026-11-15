@@ -31,6 +31,23 @@
   "targetGrade": "middle",
   "question": "{h4}からパスが来る。{h6}は、パスが来る前に何をすればいいかな?",
   "keyPoint": "パスが来る前に、後ろと前を見ておこう!",
+  "choices": [
+    {
+      "text": "ボールをじっと見て待つ",
+      "correct": false,
+      "feedback": "ボールだけ見ていると、後ろの相手に気がつかないよ。"
+    },
+    {
+      "text": "首をふって、後ろと前を見る",
+      "correct": true,
+      "feedback": "見ておけば、相手のいない方へ体を向けて受けられる。"
+    },
+    {
+      "text": "ボールの方へ走っていく",
+      "correct": false,
+      "feedback": "近づくと相手もついてきて、取られやすいよ。"
+    }
+  ],
   "teams": {
     "home": {
       "name": "味方",

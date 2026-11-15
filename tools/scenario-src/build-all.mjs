@@ -31,6 +31,9 @@ const ORDER = [
   "w5-delay-outnumbered.mjs",
   "w5-tuck-in.mjs",
   "w5-corner-attack.mjs",
+  "w6-take-on.mjs",
+  "w6-shoot.mjs",
+  "w7-formation-232.mjs",
 ];
 
 const check = process.argv.includes("--check");

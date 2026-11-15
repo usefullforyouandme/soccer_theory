@@ -5,7 +5,9 @@ import type { Category, Keyword, Scenario, VariantKey } from "./types";
 
 // scenarios/*.json をビルド時に同梱する(実行時の外部通信なし)
 const modules = import.meta.glob<Scenario>("../scenarios/*.json", { eager: true, import: "default" });
-const scenarios = Object.values(modules).sort((a, b) => a.id.localeCompare(b.id));
+// 同じテーマの中では、3-3-1 のパターンを先に、別のフォーメーション(2-3-2 など)の版を後ろに並べる
+const otherFormation = (s: Scenario) => Number(s.teams.home.formation !== "3-3-1");
+const scenarios = Object.values(modules).sort((a, b) => otherFormation(a) - otherFormation(b) || a.id.localeCompare(b.id));
 
 /** 種類の表示順と見出し */
 const CATEGORIES: { key: Category; label: string; icon: string }[] = [
