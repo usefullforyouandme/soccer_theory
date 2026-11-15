@@ -235,6 +235,19 @@ summary:focus-visible {
   color: var(--bad);
 }
 
+/* 全ステップの文を重ねて、説明欄の高さをいちばん長い文に固定する */
+.caption-stack {
+  display: grid;
+}
+
+.caption-stack > * {
+  grid-area: 1 / 1;
+}
+
+.caption-sizer {
+  visibility: hidden;
+}
+
 .caption-text {
   margin: 0;
   font-size: clamp(20px, 2.2vw, 26px);
@@ -757,14 +770,14 @@ summary:focus-visible {
   margin: 4px 0;
 }
 
-.mode-compare + .dock .info-card,
 .mode-compare + .dock .scrubber {
   flex-basis: 100%;
 }
 
-.mode-compare + .dock .info-card {
+/* ピッチの上に置いたとき(狭い画面・比較表示) */
+.viewer > .info-card {
   max-width: 820px;
-  margin: 4px auto;
+  margin: 0 auto 12px;
 }
 
 .mode-compare + .dock .dot-label,
@@ -772,15 +785,36 @@ summary:focus-visible {
   display: none;
 }
 
+/* スマホ幅: 1 段目「⏮ ◀ 再生 ▶」、2 段目「速さ・読み上げ・ことば」の固定配置。
+   ボタンの文言(答えを見る/止める/もう一度、速さ)が変わっても、折り返しや高さが変わらないようにする */
 @media (max-width: 480px) {
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+  }
+
   .ctrl {
-    min-width: 48px;
-    padding: 0 12px;
+    min-width: 0;
+    padding: 0 6px;
+  }
+
+  .mode-compare + .dock .controls {
+    flex-basis: 100%;
   }
 
   .ctrl-play {
+    grid-column: span 3;
     min-width: 0;
-    flex: 1;
+    white-space: nowrap;
+  }
+
+  .ctrl-speed,
+  .ctrl-speak,
+  .ctrl-words {
+    grid-column: span 2;
+    font-size: 15px;
+    line-height: 1.2;
   }
 }
 
@@ -808,13 +842,50 @@ summary:focus-visible {
 /* 問いかけ / きょうの ポイント */
 .info-card {
   display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 4px 12px;
   margin: 4px 0 8px;
   padding: 12px 16px;
   border-radius: 16px;
   border: 3px solid;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* 問いかけとポイントを同じ場所に重ね、カードの高さを大きい方に固定する(操作ボタンを動かさないため) */
+.info-panel {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 4px 12px;
+}
+
+.info-panel.off,
+.choice-hint.off,
+.choice-feedback.off {
+  visibility: hidden;
+}
+
+/* 再生中は問いかけを少し控えめにして、ピッチと説明に目を向けさせる */
+.info-card.watching .info-q {
+  opacity: 0.7;
+}
+
+.choice:disabled {
+  cursor: default;
+}
+
+.choice-hint {
+  margin: 6px 0 0;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.choice-feedbacks {
+  display: grid;
+}
+
+.choice-feedbacks > .choice-feedback {
+  grid-area: 1 / 1;
 }
 
 .info-card.question {
@@ -851,19 +922,6 @@ summary:focus-visible {
   font-size: clamp(20px, 2.2vw, 26px);
   font-weight: 800;
   line-height: 1.5;
-}
-
-.answer-btn {
-  grid-column: 1 / -1;
-  justify-self: center;
-  min-height: 52px;
-  padding: 0 28px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 20px;
-  font-weight: 800;
 }
 
 /* 時間バー */
@@ -1016,18 +1074,21 @@ summary:focus-visible {
 }
 
 /* 比較表示ではカードを小さくして、説明文が操作エリアに隠れにくくする */
-.mode-compare + .dock .info-card {
+.info-card.compact {
   padding: 6px 12px;
+}
+
+.info-card.compact .info-panel {
   gap: 2px 10px;
 }
 
-.mode-compare + .dock .info-icon {
+.info-card.compact .info-icon {
   width: 32px;
   height: 32px;
   font-size: 20px;
 }
 
-.mode-compare + .dock .info-text {
+.info-card.compact .info-text {
   font-size: 19px;
 }
 

@@ -252,18 +252,22 @@ function renderViewer(s: Scenario) {
   const stageArea = h("div", "stage-area");
 
   // 問いかけ(Step 1)/ きょうの ポイント(最後)
+  // 2 枚のパネルを同じ場所に重ね、カードの高さを大きい方に固定する。
+  // 再生中もカードを消さない(問いかけを見ながら答えを確かめる)ので、下の操作ボタンの位置が変わらない
   const infoCard = h("div", "info-card");
-  const infoIcon = h("span", "info-icon");
-  const infoBody = h("div", "info-body");
-  const infoHead = h("p", "info-head");
-  const infoText = h("p", "info-text");
-  infoBody.append(infoHead, infoText);
-  const ruleNote = h("p", "info-rule");
-  if (s.ruleNote) ruleNote.textContent = `※ ${s.ruleNote}`;
+  const panel = (cls: string, icon: string, head: string, text: string) => {
+    const el = h("div", `info-panel ${cls}`);
+    const body = h("div", "info-body");
+    const p = h("p", "info-text");
+    renderRichText(text, p, s.targetGrade, roles);
+    body.append(h("p", "info-head", head), p);
+    el.append(h("span", "info-icon", icon), body);
+    return { el, body };
+  };
+  const qPanel = panel("info-q", "?", "考えてみよう", s.question);
+  const pPanel = panel("info-p", "💡", "今日のポイント", s.keyPoint);
+  if (s.ruleNote) qPanel.body.append(h("p", "info-rule", `※ ${s.ruleNote}`));
   // 選択式の予想: 選んでから答えを見る
-  const choiceBox = h("div", "choices");
-  choiceBox.setAttribute("role", "group");
-  choiceBox.setAttribute("aria-label", "予想をえらぶ");
   const choiceButtons = (s.choices ?? []).map((c, k) => {
     const b = button("", "choice", () => {
       chosen = k;
@@ -273,20 +277,39 @@ function renderViewer(s: Scenario) {
     const text = h("span", "choice-text");
     renderRichText(c.text, text, s.targetGrade, roles);
     b.append(mark, text);
-    choiceBox.append(b);
     return b;
   });
-  const feedback = h("p", "choice-feedback");
-  feedback.setAttribute("aria-live", "polite");
+  const choiceHint = h("p", "choice-hint", "えらんだら、下の「▶ 答えを見る」をおそう");
+  if (choiceButtons.length) {
+    const choiceBox = h("div", "choices");
+    choiceBox.setAttribute("role", "group");
+    choiceBox.setAttribute("aria-label", "予想をえらぶ");
+    choiceBox.append(...choiceButtons);
+    qPanel.body.append(choiceBox, choiceHint);
+  }
+  // 選んだ予想への一言(答えを見た後に出す)。どれを選んでも高さが変わらないよう、全部を重ねておく
+  const feedbacks = (s.choices ?? []).map((c, k) => {
+    const f = h("p", `choice-feedback ${c.correct ? "ok" : "ng"}`);
+    f.append(h("strong", "", c.correct ? `◎ ${String.fromCharCode(65 + k)} が正かい!` : `△ ${String.fromCharCode(65 + k)} をえらんだ人へ`), document.createTextNode(" "));
+    const t = h("span");
+    renderRichText(c.feedback, t, s.targetGrade, roles);
+    f.append(t);
+    return f;
+  });
+  if (feedbacks.length) {
+    const fbStack = h("div", "choice-feedbacks");
+    fbStack.setAttribute("aria-live", "polite");
+    fbStack.append(...feedbacks);
+    pPanel.body.append(fbStack);
+  }
   const nextTarget = s.next && scenarios.find((x) => x.id === s.next!.id);
   const nextLink = h("a", "next-link");
   if (nextTarget) {
     nextLink.href = `#/s/${nextTarget.id}`;
     nextLink.append(h("strong", "", `▶ つづき: ${s.next!.label}`), h("small", "", `${childTitle(nextTarget)}(${nextTarget.pattern})`));
+    pPanel.body.append(nextLink);
   }
-  infoBody.append(ruleNote, choiceBox, feedback, nextLink);
-  const answerBtn = button("▶ 答えを見る", "answer-btn", () => play());
-  infoCard.append(infoIcon, infoBody, answerBtn);
+  infoCard.append(qPanel.el, pPanel.el);
 
   const dots = h("ol", "step-dots");
   const dotButtons = STEP_LABELS.map((label, i) => {
@@ -434,6 +457,7 @@ function renderViewer(s: Scenario) {
     speech.stop();
     if (s.choices?.length && chosen < 0 && pos === 0 && !revealed) return; // 選んでから答えを見る
     revealed = true;
+    if (pos === 0 || pos >= lastStep) revealPitch();
     if (pos >= lastStep) {
       pos = 0;
       holdUntil = performance.now() + READ_PAUSE_MS / speed();
@@ -468,6 +492,36 @@ function renderViewer(s: Scenario) {
     updateUI();
   }
 
+  // 問いかけカードの置き場所: PC 幅の 1 パターン表示ではピッチの右(操作ボタンの上)。
+  // 狭い画面・比較表示では操作エリアが画面下に固定されるので、そこに入れるとピッチを隠してしまう。ピッチの上に置く
+  const wide = window.matchMedia("(min-width: 900px)");
+  // 操作エリアも同じ。狭い画面ではピッチの枠の外に置く(枠の中だと、開いた直後に画面下へ固定されず見えない)
+  function placeDock() {
+    const side = mode !== "compare" && wide.matches;
+    if (side) {
+      stages[0].el.append(dock);
+      dock.prepend(infoCard);
+    } else {
+      stageArea.after(dock);
+      stageArea.before(infoCard);
+    }
+  }
+  wide.addEventListener("change", placeDock);
+
+  // 狭い画面で答えを見始めたら、ピッチが操作エリアに隠れない位置まで画面を送る(ボタンは画面下に固定されたまま)
+  function revealPitch() {
+    if (mode !== "compare" && wide.matches) return;
+    const r = stages[0].el.querySelector(".pitch")!.getBoundingClientRect();
+    const dockTop = dock.getBoundingClientRect().top;
+    // ピッチの下が見えるだけ送る。ただしピッチの上が画面から出ない範囲、かつ操作エリアの固定が外れない範囲まで
+    // (送りすぎると操作エリアが本来の位置にもどり、ボタンが上へ動いてしまう)
+    const after = dock.nextElementSibling?.getBoundingClientRect().top ?? Infinity;
+    const delta = Math.min(r.bottom - dockTop + 8, r.top - 8, after - window.innerHeight - 1);
+    if (delta <= 0) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollBy({ top: delta, behavior: reduce ? "auto" : "smooth" });
+  }
+
   function setMode(m: Mode) {
     mode = m;
     // お手本・ミス・比較を切りかえたら、必ず「1. はじまり」から見直す(途中のステップのまま切りかわると流れが分からなくなる)
@@ -481,8 +535,7 @@ function renderViewer(s: Scenario) {
     }));
     stageArea.className = `stage-area mode-${m}`;
     stageArea.replaceChildren(...stages.map((st) => st.el));
-    if (m === "compare") stageArea.after(dock);
-    else stages[0].el.append(dock);
+    placeDock();
     ghostLegend.hidden = m !== "compare";
     shownStep = -1;
     renderAll();
@@ -516,34 +569,23 @@ function renderViewer(s: Scenario) {
       else b.removeAttribute("aria-current");
     });
 
-    // 問いかけ(はじまりで止まっているとき)/ ポイント(最後)
+    // 問いかけ(はじまりで止まっているとき・再生中)/ ポイント(最後)。カードは消さず、中身だけ切りかえる
     const asking = pos === 0 && !playing;
-    infoCard.hidden = !(asking || atEnd);
-    infoCard.className = `info-card ${asking ? "question" : "point"}`;
-    infoIcon.textContent = asking ? "?" : "💡";
-    infoHead.textContent = asking ? "考えてみよう" : "今日のポイント";
-    renderRichText(asking ? s.question : s.keyPoint, infoText, s.targetGrade, roles);
-    ruleNote.hidden = !asking || !s.ruleNote;
-    choiceBox.hidden = !asking || !choiceButtons.length;
+    const showPoint = atEnd;
+    infoCard.className = `info-card ${showPoint ? "point" : "question"}${!asking && !showPoint ? " watching" : ""}${mode === "compare" ? " compact" : ""}`;
+    qPanel.el.classList.toggle("off", showPoint);
+    pPanel.el.classList.toggle("off", !showPoint);
+    qPanel.el.setAttribute("aria-hidden", String(showPoint));
+    pPanel.el.setAttribute("aria-hidden", String(!showPoint));
     choiceButtons.forEach((b, k) => {
       b.classList.toggle("selected", k === chosen);
       b.setAttribute("aria-pressed", String(k === chosen));
+      b.disabled = !asking; // 再生が始まったら予想は変えられない(最初にもどれば選び直せる)
     });
+    choiceHint.classList.toggle("off", !asking || chosen >= 0);
     // 選んだ予想への一言は、答えを見た後(最後)に出す
-    const c = chosen >= 0 ? s.choices![chosen] : null;
-    feedback.hidden = !(atEnd && c);
-    if (c && atEnd) {
-      feedback.className = `choice-feedback ${c.correct ? "ok" : "ng"}`;
-      feedback.replaceChildren(h("strong", "", c.correct ? `◎ ${String.fromCharCode(65 + chosen)} が正かい!` : `△ ${String.fromCharCode(65 + chosen)} をえらんだ人へ`), document.createTextNode(" "));
-      const t = h("span");
-      renderRichText(c.feedback, t, s.targetGrade, roles);
-      feedback.append(t);
-    }
-    nextLink.hidden = !(atEnd && nextTarget);
-    answerBtn.hidden = !asking;
+    feedbacks.forEach((f, k) => f.classList.toggle("off", !(showPoint && k === chosen)));
     const needChoice = asking && !!choiceButtons.length && chosen < 0;
-    answerBtn.disabled = needChoice;
-    answerBtn.textContent = needChoice ? "えらんでから答えを見よう" : "▶ 答えを見る";
     playBtn.disabled = needChoice;
 
     playBtn.textContent = playing ? "⏸ 止める" : atEnd ? "↻ もう一度" : pos === 0 ? "▶ 答えを見る" : "▶ スタート";
@@ -572,6 +614,7 @@ function renderViewer(s: Scenario) {
     cancelAnimationFrame(rafId);
     speech.stop();
     window.removeEventListener("keydown", onKey);
+    wide.removeEventListener("change", placeDock);
   };
 
   setMode("good");

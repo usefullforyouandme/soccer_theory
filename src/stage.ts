@@ -252,9 +252,21 @@ export class Stage {
     this.fxLayer = svg("g", { class: "goal-fx" }, this.svgEl);
     this.bannerLayer = svg("g", { class: "banner" }, this.svgEl);
 
+    // 説明欄の高さは、いちばん長いステップの文に合わせて固定する(ステップが変わっても下の操作ボタンが動かないように)。
+    // 全ステップの文を見えない形で同じ場所に重ね、その最大の高さを場所として取っておく
     const caption = html("div", "caption", this.mini ? undefined : this.el);
-    this.captionTitle = html("p", "caption-title", caption);
-    this.captionText = html("p", "caption-text", caption);
+    const stack = html("div", "caption-stack", caption);
+    const live = html("div", "caption-live", stack);
+    this.captionTitle = html("p", "caption-title", live);
+    this.captionText = html("p", "caption-text", live);
+    if (!this.mini) {
+      this.variant.steps.forEach((step, k) => {
+        const sizer = html("div", "caption-sizer", stack);
+        sizer.setAttribute("aria-hidden", "true");
+        html("p", "caption-title", sizer).textContent = `${k + 1}. ${step.title}`;
+        renderRichText(step.explanation, html("p", "caption-text", sizer), this.grade, this.roles);
+      });
+    }
     if (opts.live) this.captionText.setAttribute("aria-live", "polite");
   }
 
