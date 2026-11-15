@@ -1,6 +1,7 @@
 // 1パターン(おてほん/ミス)分のピッチ描画。時間の管理は main.ts が行い、ここは「ステップ i の進捗 t」の1コマを描く
+import { GLOSSARY } from "./glossary";
 import type {
-  ArrowOverlay, Ball, GoalSide, Grade, LookOverlay, OutcomeTone, Overlay, PlayerId, Point, Scenario, ShotConeOverlay, Step, Variant, VariantKey,
+  ArrowOverlay, Ball, GoalSide, Grade, LookOverlay, OutcomeTone, Overlay, PlayerId, Point, Role, Scenario, ShotConeOverlay, Step, Variant, VariantKey,
 } from "./types";
 
 const NS = "http://www.w3.org/2000/svg";
@@ -73,18 +74,67 @@ export const playerLabel = (id: PlayerId, grade: Grade) => `${id.slice(1)}${grad
 export const plainText = (s: string, grade: Grade) => s.replace(TOKEN, (_, id: string) => playerLabel(id, grade));
 export const mentionedPlayers = (s: string) => [...s.matchAll(TOKEN)].map((m) => m[1]);
 
-/** トークンをチーム色のチップにして parent に流し込む */
-export function renderRichText(s: string, parent: HTMLElement, grade: Grade) {
+/** 子ども向けのポジション名(味方は左右も。相手は向きが逆で分かりにくいので DF・MF・FW だけ) */
+const ROLE_LABEL: Record<"home" | "away", Record<Role, string>> = {
+  home: { GK: "キーパー", LB: "左DF", CB: "真ん中DF", RB: "右DF", LM: "左MF", CM: "真ん中MF", RM: "右MF", FW: "FW" },
+  away: { GK: "キーパー", LB: "DF", CB: "DF", RB: "DF", LM: "MF", CM: "MF", RM: "MF", FW: "FW" },
+};
+export const roleLabels = (scenario: Scenario): Record<PlayerId, string> => Object.fromEntries(
+  (["home", "away"] as const).flatMap((side) => scenario.teams[side].players.map((p) => [p.id, ROLE_LABEL[side][p.role]])),
+);
+
+/** 用語(ニア・フリーなど)をタップすると説明が出る */
+const TERM_RE = new RegExp(GLOSSARY.map((t) => t.match.source).join("|"), "g");
+let termTip: HTMLDivElement | null = null;
+function showTermTip(btn: HTMLElement, text: string) {
+  if (!termTip) {
+    termTip = html("div", "term-tip");
+    termTip.setAttribute("role", "status");
+    document.body.append(termTip);
+    document.addEventListener("click", (e) => {
+      if (termTip && !(e.target instanceof HTMLElement && e.target.closest(".term"))) termTip.hidden = true;
+    });
+  }
+  termTip.textContent = text;
+  termTip.hidden = false;
+  const r = btn.getBoundingClientRect();
+  const left = Math.min(window.innerWidth - 16 - 260, Math.max(16, r.left + window.scrollX));
+  termTip.style.left = `${left}px`;
+  termTip.style.top = `${r.bottom + window.scrollY + 6}px`;
+}
+function appendWithTerms(parent: HTMLElement, text: string) {
+  let last = 0;
+  for (const m of text.matchAll(TERM_RE)) {
+    const term = GLOSSARY.find((t) => new RegExp(`^(?:${t.match.source})$`).test(m[0]));
+    if (!term) continue;
+    parent.append(text.slice(last, m.index));
+    const b = html("button", "term");
+    b.type = "button";
+    b.textContent = m[0];
+    b.setAttribute("aria-label", `${m[0]}(ことばの説明)`);
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showTermTip(b, `${term.word}: ${term.text}`);
+    });
+    parent.append(b);
+    last = m.index! + m[0].length;
+  }
+  parent.append(text.slice(last));
+}
+
+/** トークンをチーム色のチップにして parent に流し込む(roles を渡すと、ポジション表示の時にポジション名も出せる) */
+export function renderRichText(s: string, parent: HTMLElement, grade: Grade, roles?: Record<PlayerId, string>) {
   parent.replaceChildren();
   let last = 0;
   for (const m of s.matchAll(TOKEN)) {
-    parent.append(s.slice(last, m.index));
+    appendWithTerms(parent, s.slice(last, m.index));
     const chip = html("span", `pchip ${teamOf(m[1])}`);
     chip.textContent = playerLabel(m[1], grade);
+    if (roles?.[m[1]]) chip.dataset.role = roles[m[1]];
     parent.append(chip);
     last = m.index! + m[0].length;
   }
-  parent.append(s.slice(last));
+  appendWithTerms(parent, s.slice(last));
 }
 
 export const prefersReducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -131,6 +181,7 @@ export class Stage {
   readonly variant: Variant;
   private readonly grade: Grade;
   private readonly mini: boolean;
+  private roles: Record<PlayerId, string> = {};
   private readonly ghost?: Variant;
   private readonly svgEl: SVGSVGElement;
   private readonly trailLayer: SVGGElement;
@@ -166,7 +217,8 @@ export class Stage {
 
     const viewBox = this.mini ? "-1.5 -2 53 72" : "-5 -6 60 80";
     this.svgEl = svg("svg", { viewBox, class: "pitch", role: "img" });
-    this.svgEl.setAttribute("aria-label", `${scenario.title}(${this.variant.label})`);
+    this.svgEl.setAttribute("aria-label", `${scenario.questionTitle ?? scenario.title}(${this.variant.label})`);
+    this.roles = roleLabels(scenario);
     this.el.appendChild(this.svgEl);
     this.defineDefs();
 
@@ -184,6 +236,10 @@ export class Stage {
         svg("circle", { r: PLAYER_R, class: "body" }, g);
         const num = svg("text", { class: "num", "text-anchor": "middle", "dominant-baseline": "central" }, g);
         num.textContent = String(p.number);
+        if (!this.mini) {
+          const role = svg("text", { class: "role", y: PLAYER_R + 1.3, "text-anchor": "middle", "dominant-baseline": "central" }, g);
+          role.textContent = ROLE_LABEL[side][p.role];
+        }
         this.players.set(p.id, { g, ring, nose });
       }
     }
@@ -261,7 +317,7 @@ export class Stage {
     this.captionStep = i;
     const step = this.variant.steps[i];
     this.captionTitle.textContent = `${i + 1}. ${step.title}`;
-    renderRichText(step.explanation, this.captionText, this.grade);
+    renderRichText(step.explanation, this.captionText, this.grade, this.roles);
   }
 
   private focusOf(step: Step): PlayerId[] {

@@ -1113,11 +1113,224 @@ summary:focus-visible {
   font-size: 21px;
 }
 
-.group-theme {
-  margin: 2px 0 10px;
+.group-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.course-no {
+  display: inline-grid;
+  place-items: center;
+  min-width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.cat-lead {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.list-view-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.list-view-tabs .tab.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.kw-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+.kw-legend-head {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* 合言葉(色と文字の両方で区別する) */
+.kw-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.kw-look { color: #7a5b00; background: #fff6d6; }
+.kw-move { color: #1e5bd8; background: #e6eefc; }
+.kw-goal { color: #b33a00; background: #ffece0; }
+.kw-switch { color: #6b2fb3; background: #f1e8fb; }
+.kw-protect { color: #1b6e3a; background: #e3f4e6; }
+
+/* 問いかけ中のタイトル(答えはまだ見せない) */
+.viewer-title.asking {
+  color: var(--accent);
+}
+
+.info-rule {
+  margin: 6px 0 0;
   color: var(--muted);
   font-size: 14px;
 }
+
+.choices {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice.selected {
+  border-color: var(--accent);
+  background: #fff3e0;
+}
+
+.choice-mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 800;
+}
+
+.choice-feedback {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: 15px;
+}
+.choice-feedback.ok { background: var(--good-soft); }
+.choice-feedback.ng { background: #f1f1f1; }
+
+.next-link {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 2px solid var(--home);
+  border-radius: 12px;
+  background: #e6eefc;
+  color: var(--ink);
+  text-decoration: none;
+}
+.next-link small {
+  color: var(--muted);
+}
+
+/* 用語(タップで説明) */
+.term {
+  padding: 0;
+  border: 0;
+  border-bottom: 2px dotted currentColor;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: help;
+}
+
+.term-tip {
+  position: absolute;
+  z-index: 20;
+  max-width: 260px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.words-panel {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 10px;
+  margin: 6px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 15px;
+}
+.words-panel[hidden] { display: none; }
+.words-panel dt { font-weight: 800; }
+.words-panel dd { margin: 0; }
+
+/* ポジション表示(「保護者・指導者の方へ」欄で切りかえ) */
+.player .role {
+  display: none;
+  fill: #fff;
+  paint-order: stroke;
+  stroke: rgba(0, 0, 0, 0.75);
+  stroke-width: 0.35px;
+  font-size: 1.25px;
+  font-weight: 700;
+}
+.show-roles .player .role { display: inline; }
+.show-roles .pchip[data-role]::after {
+  content: "(" attr(data-role) ")";
+  font-size: 0.85em;
+}
+
+.note-formation {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.role-toggle {
+  display: block;
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+.drill-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 8px;
+  margin: 4px 0;
+}
+.drill-meta dt { color: var(--muted); font-weight: 700; }
+.drill-meta dd { margin: 0; }
+.drill-note { color: var(--muted); font-size: 14px; }
 
 .card-pattern {
   align-self: flex-start;

@@ -28,6 +28,17 @@ const KANJI_UP_TO_G4 = new Set([...(
   "愛案以衣位茨印英栄媛塩岡億加果貨課芽賀改械害街各覚潟完官管関観願岐希季旗器機議求泣給挙漁共協鏡競極熊訓軍郡群径景芸欠結建健験固功好香候康佐差菜最埼材崎昨札刷察参産散残氏司試児治滋辞鹿失借種周祝順初松笑唱焼照城縄臣信井成省清静席積折節説浅戦選然争倉巣束側続卒孫帯隊達単置仲沖兆低底的典伝徒努灯働特徳栃奈梨熱念敗梅博阪飯飛必票標不夫付府阜富副兵別辺変便包法望牧末満未民無約勇要養浴利陸良料量輪類令冷例連老労録"
 )]);
 const TOKEN = /\{([ha][1-9][0-9]?)\}/g;
+const PASS_DIST_WARN = 20; // m(4年生のキック力。ゴロ・浮き球とも)
+const GROUND_SPEED_WARN = 10; // m/s(4年生のゴロのパスとして速すぎる)
+// 初めて出る時に言いかえを付ける用語(docs/scenario-prompt.md の言いかえ一覧と同じ)
+const TERMS = [
+  ["ニア", /ニア/], ["ファー", /ファー/], ["マイナス", /マイナス/], ["カウンター", /カウンター/],
+  ["フリー", /フリー(?!キック)/], ["カット", /カット/], ["こぼれ球", /こぼれ球/], ["スルーパス", /スルーパス/],
+  ["しぼる", /しぼ[らりるれろっ]/], ["クロス", /クロス/], ["カバー", /カバー/], ["プレス", /プレス/],
+];
+const NEGATIVE_CUE = /な[!!]|するな|ない[!!]|じゃなく|だけ見ない/;
+// よくあるミスの Step 2 が「動かない」型かどうか(偏りの集計用)
+const STATIC_MISTAKE = /見てるだけ|止まって|動かない|のまま|いたまま|止まった/;
 
 const schema = JSON.parse(readFileSync(join(ROOT, "schema/scenario.schema.json"), "utf8"));
 const validateSchema = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
@@ -78,6 +89,21 @@ function checkLogic(s, file) {
   checkText("pattern", s.pattern);
   if (s.counterpart) checkText("counterpart.label", s.counterpart.label);
   checkText("question", s.question, { long: true });
+  if (s.questionTitle) checkText("questionTitle", s.questionTitle);
+  else warn("questionTitle", "子ども向けの疑問形タイトルがありません(一覧と問いかけ中に答えが見えてしまいます)");
+  if (s.questionTitle && s.questionTitle === s.title) warn("questionTitle", "title と同じです(答えが見えてしまいます)");
+  if (!s.keyword) warn("keyword", "合言葉がありません");
+  if (!s.courseOrder) warn("courseOrder", "おすすめの順番がありません");
+  if (s.ruleNote) checkText("ruleNote", s.ruleNote);
+  if (s.next) checkText("next.label", s.next.label);
+  if (s.choices) {
+    s.choices.forEach((c, k) => {
+      checkText(`choices[${k}].text`, c.text);
+      checkText(`choices[${k}].feedback`, c.feedback, { long: true });
+    });
+    if (s.choices.filter((c) => c.correct).length !== 1) err("choices", "正解(correct: true)はちょうど1つにしてください");
+  }
+  if (s.coachCue && NEGATIVE_CUE.test(s.coachCue)) warn("coachCue", `否定形・禁止形の声かけです。やることを肯定形で書いてください: "${s.coachCue}"`);
   checkText("keyPoint", s.keyPoint, { long: true });
   for (const side of ["home", "away"]) checkText(`teams.${side}.name`, s.teams[side].name);
 
@@ -138,6 +164,14 @@ function checkLogic(s, file) {
         }
         const ballSpeed = dist(prev.ball, ball) / sec;
         if (ballSpeed > BALL_SPEED_ERROR) err(`${at}.ball`, `ボールが速すぎます(${ballSpeed.toFixed(1)}m/s)`);
+        // 4年生のキック力: GK のキック・スロー、コーナー・スローインは別の基準(目安 15m)なので除く
+        const passer = prev.ball.owner;
+        const setPiece = prev.ball.x < 1 || prev.ball.x > 49;
+        if (["ground", "air", "steal"].includes(ball.motion) && passer && roster.get(passer)?.role !== "GK" && !setPiece) {
+          const len = dist(prev.ball, ball);
+          if (len > PASS_DIST_WARN) warn(`${at}.ball`, `${passer} のキックが ${len.toFixed(1)}m あります(4年生は ${PASS_DIST_WARN}m 以内が目安)`);
+          else if (ball.motion === "ground" && ballSpeed > GROUND_SPEED_WARN) warn(`${at}.ball`, `${passer} のゴロのパスが速すぎます(${ballSpeed.toFixed(1)}m/s。4年生は ${GROUND_SPEED_WARN}m/s 以下が目安)`);
+        }
         const ownerChanged = prev.ball.owner !== ball.owner;
         if (["hold", "dribble"].includes(ball.motion) && ownerChanged) {
           err(`${at}.ball`, `motion=${ball.motion} なのに持ち主が ${prev.ball.owner} → ${ball.owner} に変わっています`);
@@ -189,6 +223,19 @@ function checkLogic(s, file) {
         if (o.type === "arrow" && prev && isPlayer(o.by)) checkArrow(o, prev, st, oat);
       });
     });
+  }
+
+  // 用語は、その子が最初に読む説明文で言いかえる(お手本・ミスのどちらから見ても通じるように)
+  for (const [vName, v] of Object.entries(s.variants)) {
+    const sentences = [s.question, ...v.steps.map((st) => st.explanation), s.keyPoint];
+    const shorts = [s.title, s.questionTitle ?? "", ...v.steps.flatMap((st) => [st.title, ...st.overlays.flatMap((o) => [o.text ?? "", o.label ?? ""])])];
+    for (const [term, re] of TERMS) {
+      const first = sentences.find((t) => re.test(t));
+      const usedShort = shorts.some((t) => re.test(t));
+      if (first && !first.includes(`(${term.slice(0, 2)}`)) warn(`${vName}`, `「${term}」が初めて出る文に言いかえがありません: "${rendered(first, grade)}"(例: 〜(${term}))`);
+      else if (!first && usedShort) warn(`${vName}`, `「${term}」が吹き出し・見出しだけに出ています。説明文で言いかえてください`);
+      if (re.test(v.outcomeBanner)) warn(`${vName}.outcomeBanner`, `結末の見出しに「${term}」があります。用語を使わない言い方にしてください`);
+    }
   }
 
   // good と bad の Step 1 は同じ配置にする(比べる起点をそろえる)
@@ -276,11 +323,45 @@ function checkGroups(list) {
     for (const { file, data } of items.slice(1)) {
       if (data.title !== first.title) problems.push(`${basename(file)}: group "${group}" のタイトルが ${basename(items[0].file)} と違います`);
       if (data.category !== first.category) problems.push(`${basename(file)}: group "${group}" の category が ${basename(items[0].file)} と違います`);
+      for (const k of ["questionTitle", "keyword", "courseOrder", "ruleNote"]) {
+        if (data[k] !== first[k]) problems.push(`${basename(file)}: group "${group}" の ${k} が ${basename(items[0].file)} と違います`);
+      }
     }
     const patterns = items.map((x) => x.data.pattern);
     if (new Set(patterns).size !== patterns.length) problems.push(`group "${group}" に同じパターン名があります`);
   }
+  // おすすめの順番は、テーマごとに別の番号にする
+  const byOrder = new Map();
+  for (const [group, items] of byGroup) {
+    const o = items[0].data.courseOrder;
+    if (o === undefined) continue;
+    if (byOrder.has(o)) problems.push(`courseOrder ${o} が "${byOrder.get(o)}" と "${group}" で重なっています`);
+    byOrder.set(o, group);
+  }
   return problems;
+}
+
+/** 「つづきを見る」のリンク先があるか */
+function checkNext(list) {
+  const ids = new Set(list.map((x) => x.data.id));
+  for (const dir of new Set(list.map(({ file }) => dirname(file)))) {
+    for (const f of readdirSync(dir).filter((f) => f.endsWith(".json"))) ids.add(basename(f, ".json"));
+  }
+  return list.filter(({ data }) => data.next && !ids.has(data.next.id)).map(({ file, data }) => `${basename(file)}: next のシナリオ ${data.next.id} がありません`);
+}
+
+/** よくあるミスの形の偏り(「動かない」型の数)を表示する */
+function reportMistakeKinds(list) {
+  const still = list.filter(({ data }) => {
+    const st = data.variants.bad.steps[1];
+    return [st.title, ...st.overlays.filter((o) => o.type === "callout").map((o) => o.text)].some((t) => STATIC_MISTAKE.test(t));
+  });
+  const oneVsOne = list.filter(({ data }) => /1対1/.test(data.variants.bad.steps.at(-1).explanation));
+  const scored = list.filter(({ data }) => {
+    const b = data.variants.good.steps.at(-1).ball;
+    return b.motion === "shot" && b.x >= 22.5 && b.x <= 27.5 && b.y <= 0.5;
+  });
+  console.log(`  集計: ミスが「動かない」型 ${still.length} 本 / ミスの結末がキーパーと1対1 ${oneVsOne.length} 本 / お手本がゴールで終わる ${scored.length} 本(全 ${list.length} 本)`);
 }
 
 const files = process.argv.length > 2
@@ -311,7 +392,8 @@ for (const file of files) {
   if (errors.length) failed = true;
   else valid.push({ file, data });
 }
-for (const p of [...checkGroups(valid), ...checkCounterparts(valid)]) {
+if (valid.length > 1) reportMistakeKinds(valid);
+for (const p of [...checkGroups(valid), ...checkCounterparts(valid), ...checkNext(valid)]) {
   console.error(`  ERROR ${p}`);
   failed = true;
 }

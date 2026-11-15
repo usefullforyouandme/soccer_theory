@@ -1,6 +1,7 @@
 import "./style.css";
-import { plainText, prefersReducedMotion, renderRichText, Stage } from "./stage";
-import type { Category, Scenario, VariantKey } from "./types";
+import { termsIn } from "./glossary";
+import { plainText, prefersReducedMotion, renderRichText, roleLabels, Stage } from "./stage";
+import type { Category, Keyword, Scenario, VariantKey } from "./types";
 
 // scenarios/*.json をビルド時に同梱する(実行時の外部通信なし)
 const modules = import.meta.glob<Scenario>("../scenarios/*.json", { eager: true, import: "default" });
@@ -14,6 +15,43 @@ const CATEGORIES: { key: Category; label: string; icon: string }[] = [
   { key: "transition", label: "切りかえ", icon: "🔄" },
   { key: "restart", label: "リスタート・キーパー", icon: "🧤" },
 ];
+/** ずかん全体の合言葉 */
+const KEYWORDS: Record<Keyword, { label: string; icon: string }> = {
+  look: { label: "見る", icon: "👀" },
+  move: { label: "動いて受ける", icon: "🏃" },
+  goal: { label: "ゴールへ向かう", icon: "🥅" },
+  switch: { label: "すぐ切りかえる", icon: "🔄" },
+  protect: { label: "ゴールを守る", icon: "🛡️" },
+};
+/** おすすめの順番の区切り(courseOrder の範囲) */
+const COURSE_STAGES = [
+  { upTo: 9, label: "ステップ1 まずはここから", lead: "見る・もらう・ドリブルとパス・2人で守る" },
+  { upTo: 18, label: "ステップ2 切りかえとゴール前", lead: "取られた時・取った時・ゴール前のせめと守り" },
+  { upTo: 99, label: "ステップ3 場面ごとの動き", lead: "サイドチェンジ・キーパー・スローイン・コーナー" },
+];
+const LIST_VIEW_KEY = "soccer-theory:list-view";
+const readListView = (): "course" | "category" => {
+  try {
+    return localStorage.getItem(LIST_VIEW_KEY) === "category" ? "category" : "course";
+  } catch {
+    return "course";
+  }
+};
+const saveListView = (v: string) => {
+  try {
+    localStorage.setItem(LIST_VIEW_KEY, v);
+  } catch {
+    // 保存できない環境(プライベートモードなど)では毎回「おすすめの順番」から
+  }
+};
+/** 子どもに見せるテーマ名(答えが書いていない疑問形) */
+const childTitle = (s: Scenario) => s.questionTitle ?? s.title;
+const keywordChip = (s: Scenario) => {
+  if (!s.keyword) return null;
+  const k = KEYWORDS[s.keyword];
+  return h("span", `kw-chip kw-${s.keyword}`, `${k.icon} ${k.label}`);
+};
+
 /** 同じテーマの別パターン(自分を含む) */
 const siblingsOf = (s: Scenario) => scenarios.filter((x) => x.group === s.group);
 
@@ -64,36 +102,74 @@ const speech = {
 };
 
 // ---------- 一覧 ----------
+function groupBlock(items: Scenario[], numbered: boolean) {
+  const first = items[0];
+  const block = h("div", "group-block");
+  const head = h("div", "group-head");
+  if (numbered && first.courseOrder) head.append(h("span", "course-no", String(first.courseOrder)));
+  head.append(h("h3", "group-title", childTitle(first)));
+  const chip = keywordChip(first);
+  if (chip) head.append(chip);
+  block.append(head);
+  const grid = h("div", "card-grid");
+  for (const s of items) {
+    const a = h("a", "card");
+    a.href = `#/s/${s.id}`;
+    const thumb = new Stage(s, "good", { mini: true });
+    thumb.render(0, 1); // はじまりの場面だけ(動きを見せると答えが分かってしまう)
+    a.append(thumb.el, h("span", "card-pattern", s.pattern));
+    grid.append(a);
+  }
+  block.append(grid);
+  return block;
+}
+
 function renderList() {
   document.title = "サッカー動き方ずかん";
+  const view = readListView();
   const page = h("main", "list-page");
   const header = h("header", "list-header");
   header.append(h("h1", "app-title", "⚽ サッカー動き方ずかん"), h("p", "lead", "見たい場面を選んでね"));
+  const switcher = h("div", "list-view-tabs");
+  switcher.setAttribute("role", "tablist");
+  for (const [v, label] of [["course", "おすすめの順番"], ["category", "種類ごと"]] as const) {
+    const b = button(label, `tab${view === v ? " active" : ""}`, () => {
+      saveListView(v);
+      renderList();
+    });
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(view === v));
+    switcher.append(b);
+  }
+  const kwLegend = h("p", "kw-legend");
+  kwLegend.append(h("span", "kw-legend-head", "合言葉:"), ...(Object.keys(KEYWORDS) as Keyword[]).map((k) => h("span", `kw-chip kw-${k}`, `${KEYWORDS[k].icon} ${KEYWORDS[k].label}`)));
+  header.append(switcher, kwLegend);
   page.append(header);
-  // 種類 → テーマ → パターン の順に並べる
-  for (const cat of CATEGORIES) {
-    const inCat = scenarios.filter((s) => s.category === cat.key);
-    if (!inCat.length) continue;
-    const section = h("section", "cat-section");
-    section.append(h("h2", "cat-title", `${cat.icon} ${cat.label}`));
-    const groups = [...new Set(inCat.map((s) => s.group))];
-    for (const g of groups) {
-      const items = inCat.filter((s) => s.group === g);
-      const block = h("div", "group-block");
-      block.append(h("h3", "group-title", items[0].title), h("p", "group-theme", items[0].theme));
-      const grid = h("div", "card-grid");
-      for (const s of items) {
-        const a = h("a", "card");
-        a.href = `#/s/${s.id}`;
-        const thumb = new Stage(s, "good", { mini: true });
-        thumb.render(2, 1);
-        a.append(thumb.el, h("span", "card-pattern", s.pattern));
-        grid.append(a);
-      }
-      block.append(grid);
-      section.append(block);
+
+  const groupsOf = (list: Scenario[]) => [...new Set(list.map((s) => s.group))].map((g) => list.filter((s) => s.group === g));
+  if (view === "course") {
+    // 合言葉と、U-10 の指導の順番に合わせた「おすすめの順番」
+    const sorted = [...scenarios].sort((a, b) => (a.courseOrder ?? 99) - (b.courseOrder ?? 99) || a.id.localeCompare(b.id));
+    let from = 0;
+    for (const st of COURSE_STAGES) {
+      const inStage = sorted.filter((s) => (s.courseOrder ?? 99) > from && (s.courseOrder ?? 99) <= st.upTo);
+      from = st.upTo;
+      if (!inStage.length) continue;
+      const section = h("section", "cat-section");
+      section.append(h("h2", "cat-title", st.label), h("p", "cat-lead", st.lead));
+      for (const items of groupsOf(inStage)) section.append(groupBlock(items, true));
+      page.append(section);
     }
-    page.append(section);
+  } else {
+    // 種類 → テーマ → パターン の順に並べる
+    for (const cat of CATEGORIES) {
+      const inCat = scenarios.filter((s) => s.category === cat.key);
+      if (!inCat.length) continue;
+      const section = h("section", "cat-section");
+      section.append(h("h2", "cat-title", `${cat.icon} ${cat.label}`));
+      for (const items of groupsOf(inCat)) section.append(groupBlock(items, false));
+      page.append(section);
+    }
   }
   app.replaceChildren(page);
 }
@@ -102,8 +178,8 @@ function renderList() {
 let disposeViewer: (() => void) | null = null;
 
 function renderViewer(s: Scenario) {
-  document.title = `${s.title} | サッカー動き方ずかん`;
   const lastStep = s.variants.good.steps.length - 1;
+  const roles = roleLabels(s);
 
   // 時間の状態: pos は 0〜lastStep の実数。整数 k は「ステップ k の終わり」、k-1〜k の間は「ステップ k の途中」
   let mode: Mode = "good";
@@ -116,13 +192,19 @@ function renderViewer(s: Scenario) {
   let shownStep = -1;
   let rafId = 0;
   let lastTime = 0;
+  // 答え(テーマ名)は、問いかけに答えてから出す。タイトルに答えが書いてあると予想にならないため
+  let revealed = false;
+  let chosen = -1; // 選択式の予想で選んだ番号
 
   const page = h("main", "viewer");
   const top = h("header", "viewer-header");
   const back = h("a", "back-link", "← もどる");
   back.href = "#/";
   const titleBox = h("div", "viewer-titlebox");
-  titleBox.append(h("h1", "viewer-title", s.title), h("span", "pattern-chip", s.pattern));
+  const titleEl = h("h1", "viewer-title");
+  titleBox.append(titleEl, h("span", "pattern-chip", s.pattern));
+  const kw = keywordChip(s);
+  if (kw) titleBox.append(kw);
   top.append(back, titleBox);
   // 同じテーマの別パターン(ボールの位置や守備の状況が違う)
   const siblings = siblingsOf(s);
@@ -148,7 +230,7 @@ function renderViewer(s: Scenario) {
     // 味方はいつも上へせめるので、反対側のシナリオではピッチが 180 度回った形になる
     text.append(
       h("strong", "", s.counterpart!.label),
-      h("small", "", `${other.title}(${other.pattern})`),
+      h("small", "", `${childTitle(other)}(${other.pattern})`),
       h("small", "counterpart-note", "味方はいつも上へせめるので、向きが反対になるよ"),
     );
     a.append(h("span", "counterpart-icon", "⇄"), text);
@@ -174,6 +256,33 @@ function renderViewer(s: Scenario) {
   const infoHead = h("p", "info-head");
   const infoText = h("p", "info-text");
   infoBody.append(infoHead, infoText);
+  const ruleNote = h("p", "info-rule");
+  if (s.ruleNote) ruleNote.textContent = `※ ${s.ruleNote}`;
+  // 選択式の予想: 選んでから答えを見る
+  const choiceBox = h("div", "choices");
+  choiceBox.setAttribute("role", "group");
+  choiceBox.setAttribute("aria-label", "予想をえらぶ");
+  const choiceButtons = (s.choices ?? []).map((c, k) => {
+    const b = button("", "choice", () => {
+      chosen = k;
+      updateUI();
+    });
+    const mark = h("span", "choice-mark", String.fromCharCode(65 + k));
+    const text = h("span", "choice-text");
+    renderRichText(c.text, text, s.targetGrade, roles);
+    b.append(mark, text);
+    choiceBox.append(b);
+    return b;
+  });
+  const feedback = h("p", "choice-feedback");
+  feedback.setAttribute("aria-live", "polite");
+  const nextTarget = s.next && scenarios.find((x) => x.id === s.next!.id);
+  const nextLink = h("a", "next-link");
+  if (nextTarget) {
+    nextLink.href = `#/s/${nextTarget.id}`;
+    nextLink.append(h("strong", "", `▶ つづき: ${s.next!.label}`), h("small", "", `${childTitle(nextTarget)}(${nextTarget.pattern})`));
+  }
+  infoBody.append(ruleNote, choiceBox, feedback, nextLink);
   const answerBtn = button("▶ 答えを見る", "answer-btn", () => play());
   infoCard.append(infoIcon, infoBody, answerBtn);
 
@@ -210,8 +319,19 @@ function renderViewer(s: Scenario) {
     else speech.stop();
     updateUI();
   });
+  // ことば(このシナリオに出てくる用語の説明)
+  const terms = termsIn([s.question, s.keyPoint, ...Object.values(s.variants).flatMap((v) => v.steps.map((st) => st.explanation))]);
+  const wordsPanel = h("dl", "words-panel");
+  wordsPanel.hidden = true;
+  for (const t of terms) wordsPanel.append(h("dt", "", t.word), h("dd", "", t.text));
+  const wordsBtn = button("📖 ことば", "ctrl ctrl-words", () => {
+    wordsPanel.hidden = !wordsPanel.hidden;
+    wordsBtn.setAttribute("aria-expanded", String(!wordsPanel.hidden));
+  });
+  wordsBtn.setAttribute("aria-expanded", "false");
   controls.append(restartBtn, prevBtn, playBtn, nextBtn, speedBtn);
   if (speech.supported) controls.append(speakBtn);
+  if (terms.length) controls.append(wordsBtn);
 
   const legend = h("div", "legend");
   legend.innerHTML = `
@@ -228,18 +348,31 @@ function renderViewer(s: Scenario) {
 
   // 問いかけ・ステップ表示・時間バー・操作ボタン・凡例。1パターン表示ではピッチの横、比較表示ではピッチの下に置く
   const dock = h("div", "dock");
-  dock.append(infoCard, dots, scrubber, controls, legend);
+  dock.append(infoCard, dots, scrubber, controls, wordsPanel, legend);
 
   const note = h("details", "coach-note");
   note.append(h("summary", "", "保護者・指導者の方へ(指導メモ)"), h("p", "note-theme", `テーマ: ${s.theme}`));
   if (s.coachNote) note.append(h("p", "", s.coachNote));
+  note.append(h("p", "note-formation", s.teams.home.formation === "3-3-1"
+    ? "※ 味方・相手とも 3-3-1 の形で描いています。2-3-2 や 3-2-2 など、ほかの形のチームでも、ここで見せている考え方(原則)は同じです。"
+    : `※ 味方は ${s.teams.home.formation}、相手は ${s.teams.away.formation} の形で描いています。形がちがっても、考え方(原則)は同じです。`));
+  // ポジション表示(背番号だけだと、自分のチームに置きかえにくい子のために)
+  const roleToggle = h("label", "role-toggle");
+  const roleCheck = h("input");
+  roleCheck.type = "checkbox";
+  roleCheck.addEventListener("change", () => page.classList.toggle("show-roles", roleCheck.checked));
+  roleToggle.append(roleCheck, document.createTextNode(" ピッチと説明文に、ポジション(左MF・真ん中DF など)を表示する"));
+  note.append(roleToggle);
   note.append(h("p", "note-point", `今日のポイント: ${plainText(s.keyPoint, s.targetGrade)}`));
   if (s.coachCue) note.append(h("p", "note-cue", `声かけの例: 「${s.coachCue}」`));
   if (s.drills?.length) {
     const list = h("ul", "note-drills");
     for (const d of s.drills) {
       const li = h("li");
-      li.append(h("strong", "", d.title), h("span", "", d.description));
+      const meta = h("dl", "drill-meta");
+      for (const [k, v] of [["人数", d.players], ["広さ", d.area], ["ルール", d.rule], ["成功の目安", d.success]]) meta.append(h("dt", "", k), h("dd", "", v));
+      li.append(h("strong", "", d.title), meta);
+      if (d.note) li.append(h("span", "drill-note", d.note));
       list.append(li);
     }
     note.append(h("p", "note-head", "関連する練習"), list);
@@ -265,6 +398,10 @@ function renderViewer(s: Scenario) {
       speakCurrent();
     }
     scrubber.value = String(pos);
+    if (pos > 0 && !revealed) {
+      revealed = true;
+      updateUI();
+    }
   }
 
   function tick(now: number) {
@@ -293,6 +430,8 @@ function renderViewer(s: Scenario) {
 
   function play() {
     speech.stop();
+    if (s.choices?.length && chosen < 0 && pos === 0 && !revealed) return; // 選んでから答えを見る
+    revealed = true;
     if (pos >= lastStep) {
       pos = 0;
       holdUntil = performance.now() + READ_PAUSE_MS / speed();
@@ -353,6 +492,7 @@ function renderViewer(s: Scenario) {
     const { i } = frameOf(pos);
     const parts = stages.map((st) => (stages.length > 1 ? `${st.variant.label}。` : "") + st.spokenText(i));
     if (i === 0) parts.push(plainText(s.question, s.targetGrade));
+    if (i === 0 && pos === 0 && s.choices?.length) parts.push(...s.choices.map((c, k) => `${String.fromCharCode(65 + k)}、${plainText(c.text, s.targetGrade)}`));
     if (i === lastStep && Number.isInteger(pos)) parts.push(`今日のポイント。${plainText(s.keyPoint, s.targetGrade)}`);
     speech.speak(parts.join("。"));
   }
@@ -360,6 +500,9 @@ function renderViewer(s: Scenario) {
   function updateUI() {
     const { i } = frameOf(pos);
     const atEnd = pos >= lastStep;
+    titleEl.textContent = revealed ? s.title : `? ${childTitle(s)}`;
+    titleEl.classList.toggle("asking", !revealed);
+    document.title = `${revealed ? s.title : childTitle(s)} | サッカー動き方ずかん`;
     for (const [m, b] of tabButtons) {
       b.classList.toggle("active", m === mode);
       b.setAttribute("aria-selected", String(m === mode));
@@ -377,8 +520,29 @@ function renderViewer(s: Scenario) {
     infoCard.className = `info-card ${asking ? "question" : "point"}`;
     infoIcon.textContent = asking ? "?" : "💡";
     infoHead.textContent = asking ? "考えてみよう" : "今日のポイント";
-    renderRichText(asking ? s.question : s.keyPoint, infoText, s.targetGrade);
+    renderRichText(asking ? s.question : s.keyPoint, infoText, s.targetGrade, roles);
+    ruleNote.hidden = !asking || !s.ruleNote;
+    choiceBox.hidden = !asking || !choiceButtons.length;
+    choiceButtons.forEach((b, k) => {
+      b.classList.toggle("selected", k === chosen);
+      b.setAttribute("aria-pressed", String(k === chosen));
+    });
+    // 選んだ予想への一言は、答えを見た後(最後)に出す
+    const c = chosen >= 0 ? s.choices![chosen] : null;
+    feedback.hidden = !(atEnd && c);
+    if (c && atEnd) {
+      feedback.className = `choice-feedback ${c.correct ? "ok" : "ng"}`;
+      feedback.replaceChildren(h("strong", "", c.correct ? `◎ ${String.fromCharCode(65 + chosen)} が正かい!` : `△ ${String.fromCharCode(65 + chosen)} をえらんだ人へ`), document.createTextNode(" "));
+      const t = h("span");
+      renderRichText(c.feedback, t, s.targetGrade, roles);
+      feedback.append(t);
+    }
+    nextLink.hidden = !(atEnd && nextTarget);
     answerBtn.hidden = !asking;
+    const needChoice = asking && !!choiceButtons.length && chosen < 0;
+    answerBtn.disabled = needChoice;
+    answerBtn.textContent = needChoice ? "えらんでから答えを見よう" : "▶ 答えを見る";
+    playBtn.disabled = needChoice;
 
     playBtn.textContent = playing ? "⏸ 止める" : atEnd ? "↻ もう一度" : pos === 0 ? "▶ 答えを見る" : "▶ スタート";
     playBtn.classList.toggle("playing", playing);

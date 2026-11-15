@@ -121,10 +121,12 @@ export interface Variant {
   steps: Step[];
 }
 
+export type Role = "GK" | "LB" | "CB" | "RB" | "LM" | "CM" | "RM" | "FW";
+
 export interface TeamPlayer {
   id: PlayerId;
   number: number;
-  role: "GK" | "LB" | "CB" | "RB" | "LM" | "CM" | "RM" | "FW";
+  role: Role;
 }
 
 export interface Team {
@@ -133,9 +135,31 @@ export interface Team {
   players: TeamPlayer[];
 }
 
+/** 練習メニュー(人数 / 広さ / ルール / 成功の目安) */
 export interface Drill {
   title: string;
-  description: string;
+  players: string;
+  area: string;
+  rule: string;
+  success: string;
+  note?: string;
+}
+
+/** ずかん全体の合言葉 */
+export type Keyword = "look" | "move" | "goal" | "switch" | "protect";
+
+/** 選択式の予想 */
+export interface Choice {
+  text: string;
+  correct: boolean;
+  /** 答え合わせの一言 */
+  feedback: string;
+}
+
+/** つづきの場面のシナリオ */
+export interface NextLink {
+  id: string;
+  label: string;
 }
 
 /** 同じ場面を反対側から見たシナリオ(おたがいに指し合う) */
@@ -148,8 +172,14 @@ export interface Counterpart {
 export interface Scenario {
   schemaVersion: 2;
   id: string;
-  /** テーマ名(同じテーマの別パターンは同じタイトル) */
+  /** テーマ名(同じテーマの別パターンは同じタイトル)。答えが書いてあるので、問いかけの後に出す */
   title: string;
+  /** 子ども向けの疑問形タイトル(答えを書かない)。一覧と問いかけ中に出す */
+  questionTitle?: string;
+  /** 合言葉 */
+  keyword?: Keyword;
+  /** おすすめの順番 */
+  courseOrder?: number;
   category: Category;
   /** テーマのID。同じテーマの別パターンは同じ値 */
   group: string;
@@ -168,6 +198,12 @@ export interface Scenario {
   question: string;
   /** 最後に出す「きょうの ポイント」 */
   keyPoint: string;
+  /** 選択式の予想 */
+  choices?: Choice[];
+  /** ルールが大会で違う場面の注記 */
+  ruleNote?: string;
+  /** つづきの場面 */
+  next?: NextLink;
   teams: { home: Team; away: Team };
   variants: Record<VariantKey, Variant>;
 }

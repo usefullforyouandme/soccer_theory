@@ -34,6 +34,12 @@
       "minLength": 1,
       "maxLength": 20
     },
+    "questionTitle": {
+      "description": "子ども向けの疑問形のタイトル(答えを書かない)。一覧と、問いかけ中の再生画面に出す。同じテーマのパターンは同じ値。例: 取られた時、近くの人は?",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 20
+    },
     "category": {
       "description": "種類。build=ボールを前へ運ぶ、attack=ゴールをねらう、defend=ボールを取る・守る、transition=切りかえ、restart=リスタート・キーパー",
       "enum": [
@@ -48,6 +54,22 @@
       "description": "テーマのID(同じテーマの別パターンは同じ値にする)。例: counter-press",
       "type": "string",
       "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "keyword": {
+      "description": "ずかん全体の合言葉。look=見る、move=動いて受ける、goal=ゴールへ向かう、switch=すぐ切りかえる、protect=ゴールを守る。同じテーマは同じ値",
+      "enum": [
+        "look",
+        "move",
+        "goal",
+        "switch",
+        "protect"
+      ]
+    },
+    "courseOrder": {
+      "description": "おすすめの順番(1〜)。テーマごとに1つの番号。同じテーマは同じ値",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 99
     },
     "pattern": {
       "description": "パターン名(ボールの位置・守備の状況の違い)。一覧と画面の見出しに表示。例: サイドで取られた時",
@@ -86,6 +108,27 @@
         }
       }
     },
+    "next": {
+      "description": "つづきの場面のシナリオ(例: ゴール前へ入らないミスで取られた → 取られたらすぐ取り返す)。結末の後にボタンで出す",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "label": {
+          "description": "ボタンの文字(例: 取られた後を見る)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12
+        }
+      }
+    },
     "coachCue": {
       "description": "指導者がピッチで子どもに掛ける短い言葉(任意・漢字可)。「保護者・指導者の方へ」欄に表示",
       "type": "string",
@@ -102,7 +145,10 @@
         "additionalProperties": false,
         "required": [
           "title",
-          "description"
+          "players",
+          "area",
+          "rule",
+          "success"
         ],
         "properties": {
           "title": {
@@ -111,11 +157,35 @@
             "minLength": 1,
             "maxLength": 30
           },
-          "description": {
-            "description": "やり方と、このシナリオとのつながり(1〜3文)",
+          "players": {
+            "description": "人数(例: 4対1、攻撃2人・守備1人)",
             "type": "string",
             "minLength": 1,
-            "maxLength": 200
+            "maxLength": 24
+          },
+          "area": {
+            "description": "広さ・準備(例: 10m四方、コーン4本)",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 30
+          },
+          "rule": {
+            "description": "やり方・ルール(1〜2文)",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "success": {
+            "description": "成功の目安(できたと言える状態)",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "note": {
+            "description": "このシナリオとのつながり・注意(任意)",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
           }
         }
       }
@@ -139,6 +209,44 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 50
+    },
+    "choices": {
+      "description": "選択式の予想(任意)。問いかけの下に2〜3択を出し、選んでから答えを見る。正解はちょうど1つ",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "correct",
+          "feedback"
+        ],
+        "properties": {
+          "text": {
+            "description": "選択肢(子ども向け。{h9} トークン可)",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24
+          },
+          "correct": {
+            "type": "boolean"
+          },
+          "feedback": {
+            "description": "答え合わせの一言(子ども向け)",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          }
+        }
+      }
+    },
+    "ruleNote": {
+      "description": "ルールが大会で違う場面の注記(子ども向け。Step 1 の問いかけの下に小さく出す)",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30
     },
     "teams": {
       "type": "object",
