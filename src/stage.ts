@@ -439,8 +439,10 @@ export class Stage {
     const gy = GOAL_LINE_Y[o.goal];
     const p1 = { x: GOAL_X[0], y: gy };
     const p2 = { x: GOAL_X[1], y: gy };
-    const poly = svg("polygon", { class: "ov-cone" }, this.overlayLayer);
-    const center = o.centerLine ? svg("line", { class: "ov-cone-center" }, this.overlayLayer) : null;
+    // ゴール前ではボールとゴールが近く三角形が小さくなり、選手の丸に隠れてしまうため、選手より手前に半透明で描く
+    const poly = svg("polygon", { class: "ov-cone" });
+    const center = o.centerLine ? svg("line", { class: "ov-cone-center" }) : null;
+    this.labelLayer.prepend(...(center ? [poly, center] : [poly]));
     const text = o.label && !this.mini ? this.label(o.label, 0, 0, "ov-cone-label") : null;
     this.updaters.push(({ pos, ball }) => {
       const f = o.from === "ball" ? ball : pos[o.from];
