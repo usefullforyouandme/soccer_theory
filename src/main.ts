@@ -1,5 +1,6 @@
 import "./style.css";
 import { termsIn } from "./glossary";
+import { POSITIONS, SCENE_KINDS, type PositionGuide, type PositionKey } from "./positions";
 import { plainText, prefersReducedMotion, renderRichText, roleLabels, Stage } from "./stage";
 import type { Category, Keyword, Scenario, VariantKey } from "./types";
 
@@ -32,20 +33,28 @@ const COURSE_STAGES = [
   { upTo: 99, label: "ステップ3 場面ごとの動き", lead: "サイドチェンジ・キーパー・スローイン・コーナー" },
 ];
 const LIST_VIEW_KEY = "soccer-theory:list-view";
-const readListView = (): "course" | "category" => {
+const POSITION_KEY = "soccer-theory:position";
+type ListView = "course" | "category" | "position";
+const readStored = (key: string) => {
   try {
-    return localStorage.getItem(LIST_VIEW_KEY) === "category" ? "category" : "course";
+    return localStorage.getItem(key);
   } catch {
-    return "course";
+    return null;
   }
 };
-const saveListView = (v: string) => {
+const saveStored = (key: string, v: string) => {
   try {
-    localStorage.setItem(LIST_VIEW_KEY, v);
+    localStorage.setItem(key, v);
   } catch {
     // 保存できない環境(プライベートモードなど)では毎回「おすすめの順番」から
   }
 };
+const readListView = (): ListView => {
+  const v = readStored(LIST_VIEW_KEY);
+  return v === "category" || v === "position" ? v : "course";
+};
+const positionOf = (key: string | null | undefined) => POSITIONS.find((p) => p.key === key);
+const readPosition = (): PositionGuide => positionOf(readStored(POSITION_KEY)) ?? POSITIONS[0];
 /** 子どもに見せるテーマ名(答えが書いていない疑問形) */
 const childTitle = (s: Scenario) => s.questionTitle ?? s.title;
 const keywordChip = (s: Scenario) => {
@@ -114,16 +123,85 @@ function groupBlock(items: Scenario[], numbered: boolean) {
   if (chip) head.append(chip);
   block.append(head);
   const grid = h("div", "card-grid");
-  for (const s of items) {
-    const a = h("a", "card");
-    a.href = `#/s/${s.id}`;
-    const thumb = new Stage(s, "good", { mini: true });
-    thumb.render(0, 1); // はじまりの場面だけ(動きを見せると答えが分かってしまう)
-    a.append(thumb.el, h("span", "card-pattern", s.pattern));
-    grid.append(a);
-  }
+  for (const s of items) grid.append(scenarioCard(s));
   block.append(grid);
   return block;
+}
+
+/** パターンのカード(pos を渡すと、そのポジションの目で見る再生画面へ) */
+function scenarioCard(s: Scenario, pos?: PositionKey) {
+  const a = h("a", "card");
+  a.href = `#/s/${s.id}${pos ? `?pos=${pos}` : ""}`;
+  const thumb = new Stage(s, "good", { mini: true });
+  thumb.render(0, 1); // はじまりの場面だけ(動きを見せると答えが分かってしまう)
+  a.append(thumb.el, h("span", "card-pattern", s.pattern));
+  return a;
+}
+
+/** ミニピッチに、そのポジションがおもに動く所をぬる(味方は上へせめる) */
+function positionPitch(p: PositionGuide) {
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag: string, attrs: Record<string, string | number>, parent: Element) => {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+    parent.append(e);
+    return e;
+  };
+  const svgEl = document.createElementNS(NS, "svg");
+  svgEl.setAttribute("viewBox", "-2 -5 54 75");
+  svgEl.setAttribute("class", "pos-pitch");
+  svgEl.setAttribute("role", "img");
+  svgEl.setAttribute("aria-label", `${p.label}がおもに動く所`);
+  el("rect", { x: 0, y: 0, width: 50, height: 68, class: "pp-field" }, svgEl);
+  for (const a of p.area) el("rect", { x: a.x, y: a.y, width: a.w, height: a.h, rx: 2, class: "pp-area" }, svgEl);
+  el("line", { x1: 0, y1: 34, x2: 50, y2: 34, class: "pp-line" }, svgEl);
+  el("circle", { cx: 25, cy: 34, r: 6, class: "pp-line" }, svgEl);
+  el("rect", { x: 13, y: 0, width: 24, height: 12, class: "pp-line" }, svgEl);
+  el("rect", { x: 13, y: 56, width: 24, height: 12, class: "pp-line" }, svgEl);
+  const label = el("text", { x: 25, y: -1.5, class: "pp-text", "text-anchor": "middle" }, svgEl);
+  label.textContent = "▲ せめる方向";
+  return svgEl;
+}
+
+/** 一覧の「ポジションから選ぶ」: ポジションを1つ選び、解説と場面ごとのシナリオを出す */
+function positionSection(p: PositionGuide) {
+  const section = h("section", "cat-section pos-section");
+  const picker = h("div", "pos-picker");
+  picker.setAttribute("role", "tablist");
+  picker.setAttribute("aria-label", "ポジション");
+  for (const x of POSITIONS) {
+    const b = button(x.label, `pos-tab${x.key === p.key ? " active" : ""}`, () => {
+      saveStored(POSITION_KEY, x.key);
+      renderList();
+    });
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(x.key === p.key));
+    picker.append(b);
+  }
+  section.append(picker);
+
+  const guide = h("div", "pos-guide");
+  const text = h("div", "pos-guide-text");
+  text.append(h("h2", "pos-name", `${p.label}(${p.numbers}番)`), h("p", "pos-one", p.one));
+  const dl = h("dl", "pos-points");
+  for (const [k, v] of [["🥅 せめる時", p.attack], ["🛡️ 守る時", p.defend], ["⚠️ よくあるミス", p.mistake]]) dl.append(h("dt", "", k), h("dd", "", v));
+  text.append(dl, h("p", "pos-232", `指導者の方へ: ${p.note232}`));
+  guide.append(positionPitch(p), text);
+  section.append(guide);
+
+  for (const scene of p.scenes) {
+    const items = scene.ids.map((id) => scenarios.find((s) => s.id === id)).filter((s): s is Scenario => !!s);
+    if (!items.length) continue;
+    const block = h("div", "group-block");
+    const head = h("div", "group-head");
+    const kind = SCENE_KINDS[scene.kind];
+    head.append(h("span", `scene-chip scene-${scene.kind}`, `${kind.icon} ${kind.label}`), h("h3", "group-title", scene.q));
+    const grid = h("div", "card-grid");
+    for (const s of items) grid.append(scenarioCard(s, p.key));
+    block.append(head, grid);
+    section.append(block);
+  }
+  return section;
 }
 
 function renderList() {
@@ -134,9 +212,9 @@ function renderList() {
   header.append(h("h1", "app-title", "⚽ サッカー動き方ずかん"), h("p", "lead", "見たい場面を選んでね"));
   const switcher = h("div", "list-view-tabs");
   switcher.setAttribute("role", "tablist");
-  for (const [v, label] of [["course", "おすすめの順番"], ["category", "種類ごと"]] as const) {
+  for (const [v, label] of [["course", "おすすめの順番"], ["category", "種類ごと"], ["position", "ポジションから選ぶ"]] as const) {
     const b = button(label, `tab${view === v ? " active" : ""}`, () => {
-      saveListView(v);
+      saveStored(LIST_VIEW_KEY, v);
       renderList();
     });
     b.setAttribute("role", "tab");
@@ -145,7 +223,8 @@ function renderList() {
   }
   const kwLegend = h("p", "kw-legend");
   kwLegend.append(h("span", "kw-legend-head", "合言葉:"), ...(Object.keys(KEYWORDS) as Keyword[]).map((k) => h("span", `kw-chip kw-${k}`, `${KEYWORDS[k].icon} ${KEYWORDS[k].label}`)));
-  header.append(switcher, kwLegend);
+  header.append(switcher);
+  if (view !== "position") header.append(kwLegend);
   page.append(header);
 
   const groupsOf = (list: Scenario[]) => [...new Set(list.map((s) => s.group))].map((g) => list.filter((s) => s.group === g));
@@ -162,6 +241,8 @@ function renderList() {
       for (const items of groupsOf(inStage)) section.append(groupBlock(items, true));
       page.append(section);
     }
+  } else if (view === "position") {
+    page.append(positionSection(readPosition()));
   } else {
     // 種類 → テーマ → パターン の順に並べる
     for (const cat of CATEGORIES) {
@@ -179,7 +260,7 @@ function renderList() {
 // ---------- 再生画面 ----------
 let disposeViewer: (() => void) | null = null;
 
-function renderViewer(s: Scenario) {
+function renderViewer(s: Scenario, me?: PositionGuide) {
   const lastStep = s.variants.good.steps.length - 1;
   const roles = roleLabels(s);
 
@@ -208,6 +289,12 @@ function renderViewer(s: Scenario) {
   const kw = keywordChip(s);
   if (kw) titleBox.append(kw);
   top.append(back, titleBox);
+  // ポジションから選んで来た時は、どの丸が自分のポジションか分かるようにする
+  const posQuery = me ? `?pos=${me.key}` : "";
+  if (me) {
+    page.classList.add("show-roles", ...me.roles.map((r) => `me-${r}`));
+    top.append(h("p", "me-chip", `🧍 ${me.label}(${me.numbers}番)の目で見よう`));
+  }
   // 同じテーマの別パターン(ボールの位置や守備の状況が違う)
   const siblings = siblingsOf(s);
   if (siblings.length > 1) {
@@ -216,7 +303,7 @@ function renderViewer(s: Scenario) {
     nav.append(h("span", "pattern-nav-label", "パターン:"));
     for (const x of siblings) {
       const a = h("a", `pattern-link${x.id === s.id ? " current" : ""}`, x.pattern);
-      a.href = `#/s/${x.id}`;
+      a.href = `#/s/${x.id}${posQuery}`;
       if (x.id === s.id) a.setAttribute("aria-current", "page");
       nav.append(a);
     }
@@ -227,7 +314,7 @@ function renderViewer(s: Scenario) {
   const other = s.counterpart && scenarios.find((x) => x.id === s.counterpart!.id);
   if (other) {
     const a = h("a", "counterpart-link");
-    a.href = `#/s/${other.id}`;
+    a.href = `#/s/${other.id}${posQuery}`;
     const text = h("span", "counterpart-text");
     // 味方はいつも上へせめるので、反対側のシナリオではピッチが 180 度回った形になる
     text.append(
@@ -305,7 +392,7 @@ function renderViewer(s: Scenario) {
   const nextTarget = s.next && scenarios.find((x) => x.id === s.next!.id);
   const nextLink = h("a", "next-link");
   if (nextTarget) {
-    nextLink.href = `#/s/${nextTarget.id}`;
+    nextLink.href = `#/s/${nextTarget.id}${posQuery}`;
     nextLink.append(h("strong", "", `▶ つづき: ${s.next!.label}`), h("small", "", `${childTitle(nextTarget)}(${nextTarget.pattern})`));
     pPanel.body.append(nextLink);
   }
@@ -385,6 +472,7 @@ function renderViewer(s: Scenario) {
   const roleToggle = h("label", "role-toggle");
   const roleCheck = h("input");
   roleCheck.type = "checkbox";
+  roleCheck.checked = !!me;
   roleCheck.addEventListener("change", () => page.classList.toggle("show-roles", roleCheck.checked));
   roleToggle.append(roleCheck, document.createTextNode(" ピッチと説明文に、ポジション(左MF・真ん中DF など)を表示する"));
   note.append(roleToggle);
@@ -625,9 +713,9 @@ function renderViewer(s: Scenario) {
 function route() {
   disposeViewer?.();
   disposeViewer = null;
-  const m = location.hash.match(/^#\/s\/([a-z0-9-]+)$/);
+  const m = location.hash.match(/^#\/s\/([a-z0-9-]+)(?:\?pos=([a-z]+))?$/);
   const s = m && scenarios.find((x) => x.id === m[1]);
-  if (s) renderViewer(s);
+  if (s) renderViewer(s, positionOf(m[2]));
   else renderList();
   window.scrollTo(0, 0);
 }

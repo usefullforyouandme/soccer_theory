@@ -229,7 +229,7 @@ export class Stage {
     const playerLayer = svg("g", { class: "players" }, this.svgEl);
     for (const side of ["home", "away"] as const) {
       for (const p of scenario.teams[side].players) {
-        const g = svg("g", { class: `player ${side}${p.role === "GK" ? " gk" : ""}` }, playerLayer);
+        const g = svg("g", { class: `player ${side}${p.role === "GK" ? " gk" : ""}`, "data-role": p.role }, playerLayer);
         const ring = svg("circle", { r: PLAYER_R + 0.8, class: "focus-ring" }, g);
         const nose = svg("g", { class: "nose" }, g);
         svg("path", { d: "M-0.7,-1.3 L0,-2.35 L0.7,-1.3 Z" }, nose); // 向き(上向きで作って回転させる)

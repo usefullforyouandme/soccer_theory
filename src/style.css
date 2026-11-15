@@ -1504,3 +1504,135 @@ summary:focus-visible {
   border-color: var(--ink);
   color: #fff;
 }
+
+/* ---------- 一覧: ポジションから選ぶ(src/positions.ts) ---------- */
+.list-view-tabs {
+  flex-wrap: wrap;
+}
+
+.pos-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+.pos-tab {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 3px solid var(--home);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--home);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.pos-tab.active {
+  background: var(--home);
+  color: #fff;
+}
+
+.pos-guide {
+  display: grid;
+  grid-template-columns: minmax(110px, 160px) 1fr;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 18px;
+  padding: 14px;
+  border: 3px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+}
+
+.pos-pitch {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.pp-field { fill: #3f9b4a; }
+.pp-area { fill: #ffe14d; fill-opacity: 0.75; stroke: #fff; stroke-width: 0.6; }
+.pp-line { fill: none; stroke: #fff; stroke-width: 0.5; stroke-opacity: 0.8; }
+.pp-text { fill: var(--ink); font-size: 3px; font-weight: 800; }
+
+.pos-name {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 26px);
+}
+
+.pos-one {
+  margin: 2px 0 10px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--home);
+}
+
+.pos-points {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.pos-points dt { font-weight: 800; white-space: nowrap; }
+.pos-points dd { margin: 0; }
+
+.pos-232 {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 560px) {
+  .pos-guide { grid-template-columns: 1fr; }
+  .pos-pitch { max-width: 150px; margin: 0 auto; }
+  .pos-points { grid-template-columns: 1fr; gap: 0 0; }
+  .pos-points dd { margin-bottom: 6px; }
+}
+
+.scene-chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.scene-defend { background: #2e5e8c; }
+.scene-switch { background: #7a4fb0; }
+.scene-restart { background: #8a5a12; }
+.scene-attack { background: #b0361f; }
+
+/* 再生画面: ポジションから来た時の「自分」の丸(黄色いふちとポジション名) */
+.me-chip {
+  margin: 6px 0 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--home);
+}
+.me-GK .player.home[data-role="GK"] .body,
+.me-CB .player.home[data-role="CB"] .body,
+.me-LB .player.home[data-role="LB"] .body,
+.me-RB .player.home[data-role="RB"] .body,
+.me-CM .player.home[data-role="CM"] .body,
+.me-LM .player.home[data-role="LM"] .body,
+.me-RM .player.home[data-role="RM"] .body,
+.me-FW .player.home[data-role="FW"] .body {
+  stroke: #ffe14d;
+  stroke-width: 0.7;
+}
+.me-GK .player.home[data-role="GK"] .role,
+.me-CB .player.home[data-role="CB"] .role,
+.me-LB .player.home[data-role="LB"] .role,
+.me-RB .player.home[data-role="RB"] .role,
+.me-CM .player.home[data-role="CM"] .role,
+.me-LM .player.home[data-role="LM"] .role,
+.me-RM .player.home[data-role="RM"] .role,
+.me-FW .player.home[data-role="FW"] .role {
+  fill: #ffe14d;
+}
