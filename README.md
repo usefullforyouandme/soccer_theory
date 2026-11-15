@@ -15,6 +15,7 @@ v0.9:カタログの全パターンを作成し、18 テーマ・シナリオ 40
 - [レビュー指摘一覧(修正予定)](docs/REVIEW_FINDINGS.md)
 - [シナリオカタログ](docs/SCENARIO_CATALOG.md)
 - [シナリオ作成スクリプト](tools/scenario-src/README.md)
+- [指導者目線のレビュー](docs/COACH_REVIEW.md)
 
 ## 開発
 ```bash
