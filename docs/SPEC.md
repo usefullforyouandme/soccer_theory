@@ -186,6 +186,7 @@ soccer_theory/
 ├── schema/scenario.schema.json
 ├── scenarios/*.json          # シナリオデータ(ビルド時に同梱)
 ├── scripts/validate.mjs      # 検証スクリプト
+├── tools/scenario-src/       # 手で座標を設計したシナリオの元データ(座標表 → JSON の生成スクリプト)
 ├── vite.config.ts / tsconfig.json   # vite.config.ts に本番用 CSP の差し替えプラグイン
 └── .github/
     ├── workflows/            # validate.yml(PR)/ deploy.yml(Pages 公開)
@@ -193,11 +194,19 @@ soccer_theory/
 ```
 
 ## 11. シナリオ作成フロー
+シナリオの作り方は 2 通りある。今ある 39 本はすべて B(座標表のスクリプト)で作っている。
+
+**A. LLM で JSON を作る**
 1. `docs/scenario-prompt.md` のテーマ欄を埋めて LLM に渡す。
 2. 出力を `scenarios/<id>.json` として保存する。
 3. `npm run validate` を実行し、エラーが無くなるまで修正する。警告も原則ゼロにする。
 4. `npm run dev` でビューアを起動し、動きを目視確認する(指導者の目線で不自然な点がないか)。
 5. コミットして main に push すると、CI で再度検証され、問題がなければ GitHub Pages に公開される。
+
+**B. 座標表のスクリプトで作る(`tools/scenario-src/`)**
+1. 選手 16 人 × 5 ステップの座標表と、文章・ボール・オーバーレイをスクリプトに書く(書き方は `tools/scenario-src/README.md`)。
+2. `npm run scenarios` で `scenarios/*.json` を作り直し、`npm run validate` で検証する。
+3. このスクリプトから作ったシナリオは、JSON を直接直さず、スクリプトを直して作り直す。`npm run scenarios:check`(CI でも実行)が、スクリプトと JSON のずれを検出する。
 
 ## 12. 今後の予定
 レビューで挙がった修正点は `docs/REVIEW_FINDINGS.md` に記録している(対応時に状態を更新)。
@@ -205,5 +214,10 @@ soccer_theory/
 - [x] ビューアの実装(Vite + TypeScript + SVG)
 - [x] GitHub Pages への自動デプロイ
 - [x] 学習の流れ(問いかけ → 動き → まとめ)、読み上げ
-- [ ] シナリオの追加(`docs/SCENARIO_CATALOG.md` の第 1〜3 弾、計 17 本)
+- [x] シナリオの追加(`docs/SCENARIO_CATALOG.md` の第 1〜3 弾。18 テーマ・計 39 本)
+- [x] シナリオ作成スクリプトのリポジトリへの保存と、JSON とのずれの自動チェック(`npm run scenarios:check`)
+- [ ] 「サイドからゴール前へ:ゴールライン近くから」(カタログで唯一の未作成パターン)
+- [ ] 「つづきを見る」(シナリオ同士のつながり。例: サイドからゴール前へのミス → 取られたらすぐ取り返す)
+- [ ] タブレット実機での確認(タッチ操作・表示・読み上げの日本語音声)
+- [ ] 指導者による 39 本の動きの確認と、子どもによる試用
 - [x] レビュー指摘(重要度「低」)の対応(A-13 はシナリオの追加として上の項目で扱う)
