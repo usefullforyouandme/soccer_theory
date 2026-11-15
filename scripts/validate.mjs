@@ -2,7 +2,7 @@
 // シナリオJSONの検証: JSON Schema(構造) + ロジックチェック(整合性・リアリティ・教材としての読みやすさ)
 // 使い方: node scripts/validate.mjs [ファイル...]  (省略時は scenarios/*.json 全件)
 import { readFileSync, readdirSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import Ajv2020 from "ajv/dist/2020.js";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -76,6 +76,7 @@ function checkLogic(s, file) {
   };
   checkText("title", s.title);
   checkText("pattern", s.pattern);
+  if (s.counterpart) checkText("counterpart.label", s.counterpart.label);
   checkText("question", s.question, { long: true });
   checkText("keyPoint", s.keyPoint, { long: true });
   for (const side of ["home", "away"]) checkText(`teams.${side}.name`, s.teams[side].name);
@@ -233,6 +234,34 @@ function checkLogic(s, file) {
   return { errors, warnings };
 }
 
+/** 「反対側から見る」のリンクが、存在するシナリオを指し、おたがいに指し合っているか */
+function checkCounterparts(list) {
+  const problems = [];
+  // 1本だけ検証する時も相手を確かめられるよう、同じフォルダのシナリオも読む
+  const byId = new Map();
+  for (const dir of new Set(list.map(({ file }) => dirname(file)))) {
+    for (const f of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
+      try {
+        const data = JSON.parse(readFileSync(join(dir, f), "utf8"));
+        byId.set(data.id, { file: join(dir, f), data });
+      } catch {
+        // 読めないファイルは、それ自身の検証でエラーになる
+      }
+    }
+  }
+  for (const item of list) byId.set(item.data.id, item);
+  for (const { file, data } of list) {
+    const c = data.counterpart;
+    if (!c) continue;
+    const target = byId.get(c.id);
+    if (c.id === data.id) problems.push(`${basename(file)}: counterpart が自分自身を指しています`);
+    else if (!target) problems.push(`${basename(file)}: counterpart のシナリオ ${c.id} がありません`);
+    else if (target.data.group === data.group) problems.push(`${basename(file)}: counterpart は別のテーマのシナリオにしてください(同じテーマはパターンで切りかえる)`);
+    else if (target.data.counterpart?.id !== data.id) problems.push(`${basename(file)}: ${c.id} の counterpart が ${data.id} を指していません(おたがいに指し合ってください)`);
+  }
+  return problems;
+}
+
 /** 同じテーマ(group)のシナリオ同士で、タイトル・種類・パターン名がそろっているか */
 function checkGroups(list) {
   const problems = [];
@@ -281,7 +310,7 @@ for (const file of files) {
   if (errors.length) failed = true;
   else valid.push({ file, data });
 }
-for (const p of checkGroups(valid)) {
+for (const p of [...checkGroups(valid), ...checkCounterparts(valid)]) {
   console.error(`  ERROR ${p}`);
   failed = true;
 }

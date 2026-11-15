@@ -68,6 +68,7 @@ const S1 = { title: "はじまり", text: "{h7}が左サイドでボールを持
 const scenario = {
   schemaVersion: 2,
   id: "side-attack-box-entry",
+  counterpart: { id: "mark-and-ball-cross", label: "守る側から見る" },
   title: "サイドからゴール前へ",
   category: "attack",
   group: "box-entry",

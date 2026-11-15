@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "相手がクロスを上げそう。{h4}はどこに立てばいいかな?",
   "keyPoint": "ボールと相手の両方が見える場所に立とう!",
+  "counterpart": {
+    "id": "side-attack-box-entry",
+    "label": "せめる側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",

@@ -136,6 +136,13 @@ export interface Drill {
   description: string;
 }
 
+/** 同じ場面を反対側から見たシナリオ(おたがいに指し合う) */
+export interface Counterpart {
+  id: string;
+  /** ボタンの文字(例: 守る側から見る) */
+  label: string;
+}
+
 export interface Scenario {
   schemaVersion: 2;
   id: string;
@@ -148,6 +155,8 @@ export interface Scenario {
   pattern: string;
   theme: string;
   coachNote?: string;
+  /** 反対側(攻める側/守る側など)から見たシナリオ */
+  counterpart?: Counterpart;
   /** 指導者がピッチで子どもに掛ける短い言葉(指導者向け欄に表示) */
   coachCue?: string;
   /** 関連する練習メニュー(指導者向け欄に表示) */

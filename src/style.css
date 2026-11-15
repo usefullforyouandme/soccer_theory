@@ -1174,6 +1174,53 @@ summary:focus-visible {
   text-decoration: none;
 }
 
+.counterpart-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 6px 16px 6px 8px;
+  border-radius: 14px;
+  border: 2px solid var(--accent);
+  background: #fff4e5;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.counterpart-link:hover {
+  background: #ffe6c2;
+}
+
+.counterpart-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.counterpart-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.counterpart-text strong {
+  font-size: 16px;
+}
+
+.counterpart-text small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .pattern-link.current {
   background: var(--ink);
   border-color: var(--ink);

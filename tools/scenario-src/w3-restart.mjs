@@ -175,6 +175,7 @@ const e3 = {
 build({
   ...e3,
   id: "corner-defense-right",
+  counterpart: { id: "corner-attack-right", label: "せめる側から見る" },
   pattern: "右からのコーナー",
   question: "相手のコーナーキック。{h3}と{h2}はどこを守ればいいかな?",
   keyPoint: "ボールだけを見ないで、ゴール前の場所と相手を守ろう!",
@@ -247,6 +248,7 @@ a9 25,57 26.5,58 27,58 26.5,58.5 24.5,60.5`,
 build({
   ...e3,
   id: "corner-defense-short",
+  counterpart: { id: "corner-attack-short", label: "せめる側から見る" },
   pattern: "左からの短いコーナー",
   question: "相手が短いコーナーキックをしてきた。{h7}はどうすればいいかな?",
   keyPoint: "短いコーナーには、近くの人がすぐによせよう!",

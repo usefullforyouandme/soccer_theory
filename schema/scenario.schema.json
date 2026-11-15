@@ -64,6 +64,28 @@
       "description": "指導者向けの補足(任意・漢字可)",
       "type": "string"
     },
+    "counterpart": {
+      "description": "同じ場面を反対側(攻める側/守る側、取った側/取られた側)から見たシナリオへのリンク。相手側のシナリオからも、このシナリオを指す(おたがいに指し合う)",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "description": "反対側のシナリオの id",
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+        },
+        "label": {
+          "description": "ボタンの文字(例: 守る側から見る)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12
+        }
+      }
+    },
     "coachCue": {
       "description": "指導者がピッチで子どもに掛ける短い言葉(任意・漢字可)。「保護者・指導者の方へ」欄に表示",
       "type": "string",

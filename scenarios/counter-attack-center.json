@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "{h6}がボールを取ったら、まずどこを見ればいいかな?",
   "keyPoint": "ボールを取ったら、まず前を見よう!",
+  "counterpart": {
+    "id": "counter-press-center",
+    "label": "取られた側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",

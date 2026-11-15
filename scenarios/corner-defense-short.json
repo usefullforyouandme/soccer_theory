@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "相手が短いコーナーキックをしてきた。{h7}はどうすればいいかな?",
   "keyPoint": "短いコーナーには、近くの人がすぐによせよう!",
+  "counterpart": {
+    "id": "corner-attack-short",
+    "label": "せめる側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",

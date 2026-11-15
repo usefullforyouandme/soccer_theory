@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "相手が中央からパスを出しそう。{h4}はどこに立てばいいかな?",
   "keyPoint": "ボールと相手の両方が見える場所に立とう!",
+  "counterpart": {
+    "id": "run-behind-center",
+    "label": "せめる側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",

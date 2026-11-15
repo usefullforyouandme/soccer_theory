@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "相手のコーナーキック。{h3}と{h2}はどこを守ればいいかな?",
   "keyPoint": "ボールだけを見ないで、ゴール前の場所と相手を守ろう!",
+  "counterpart": {
+    "id": "corner-attack-right",
+    "label": "せめる側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",

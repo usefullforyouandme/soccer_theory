@@ -139,6 +139,17 @@ function renderViewer(s: Scenario) {
     top.append(nav);
   }
 
+  // 同じ場面を反対側(守る側/せめる側など)から見たシナリオ
+  const other = s.counterpart && scenarios.find((x) => x.id === s.counterpart!.id);
+  if (other) {
+    const a = h("a", "counterpart-link");
+    a.href = `#/s/${other.id}`;
+    const text = h("span", "counterpart-text");
+    text.append(h("strong", "", s.counterpart!.label), h("small", "", `${other.title}(${other.pattern})`));
+    a.append(h("span", "counterpart-icon", "⇄"), text);
+    top.append(a);
+  }
+
   const tabs = h("div", "mode-tabs");
   tabs.setAttribute("role", "tablist");
   const tabDefs: [Mode, string][] = [["good", "◎ お手本"], ["bad", "× よくあるミス"], ["compare", "ならべてくらべる"]];

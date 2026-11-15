@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "中央で{h6}が取られたら、{h6}と{h9}はどうする?",
   "keyPoint": "取られたら、近くの人はすぐに取り返しに行こう!",
+  "counterpart": {
+    "id": "counter-attack-center",
+    "label": "取った側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",

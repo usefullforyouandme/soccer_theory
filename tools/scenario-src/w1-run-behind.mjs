@@ -17,6 +17,7 @@ const common = {
 build({
   ...common,
   id: "run-behind-center",
+  counterpart: { id: "mark-and-ball-through", label: "守る側から見る" },
   pattern: "中央から",
   question: "{h9}は、いつ相手の後ろへ走り出せばいいかな?",
   coachNote: "中央でボールを持ったCM(6)からのスルーパス。FW(9)は相手CBとならぶ位置(黄色い線=オフサイドライン)で待ち、パスが出るのと同時にななめに走れば、オフサイドにならずにキーパーと1対1になれる。bad は9が早く走り出して線より前で待ち、パスが出た瞬間にオフサイドになる例。オフサイドかどうかは「パスが出た瞬間の位置」で決まることを伝える。",

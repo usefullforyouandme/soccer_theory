@@ -74,6 +74,7 @@ export function build(def, outDir) {
     targetGrade: "middle",
     question: def.question,
     keyPoint: def.keyPoint,
+    counterpart: def.counterpart,
     teams: {
       home: { name: "味方", formation: "3-3-1", players: roster("home") },
       away: { name: "相手", formation: "3-3-1", players: roster("away") },

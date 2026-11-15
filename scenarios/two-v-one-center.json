@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "2人対1人だ!{h6}はいつパスを出せばいいかな?",
   "keyPoint": "守る人を自分に引きつけてから、空いた味方へ出そう!",
+  "counterpart": {
+    "id": "delay-outnumbered-counter",
+    "label": "守る側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",

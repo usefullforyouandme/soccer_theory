@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "ゴール前は相手でいっぱい。{h7}はどこへ動けばいいかな?",
   "keyPoint": "ゴール前がいっぱいなら、近くでもらって角度を作ろう!",
+  "counterpart": {
+    "id": "corner-defense-short",
+    "label": "守る側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",
@@ -452,7 +456,7 @@
         {
           "phase": "nextPlay",
           "title": "相手のボール",
-          "explanation": "相手のキーパーが、すぐに前へ投げた。",
+          "explanation": "相手のキーパーが、大きくけって前へ。",
           "durationMs": 2000,
           "players": {
             "h1": { "x": 25, "y": 55.5 },

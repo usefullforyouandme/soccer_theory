@@ -21,6 +21,10 @@
   "targetGrade": "middle",
   "question": "{h9}は、いつ相手の後ろへ走り出せばいいかな?",
   "keyPoint": "相手の守る人とならんで待ち、パスが出る時に走り出そう!",
+  "counterpart": {
+    "id": "mark-and-ball-through",
+    "label": "守る側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",
