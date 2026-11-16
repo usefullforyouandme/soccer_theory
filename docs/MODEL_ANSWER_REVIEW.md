@@ -5,6 +5,8 @@
 
 この文書は **別セッション・別エージェントが修正作業を行うための指示書**。1 件ずつ独立に直せるよう、修正案は座標まで書いてある。
 
+**2026-11-17: 26 件すべて対応済み**(No.1・No.6 を先に、残り 24 件を一括で)。案から変えた点は 4 章末尾の「一括対応の結果」にまとめた。
+
 ## 1. 進め方(修正を行うエージェントへ)
 
 - 作業単位: **1 セッションで 1〜3 件**(同じスクリプトの件はまとめてよい)。着手前に `docs/BACKLOG.md` の BL-24 を「作業中」にする。
@@ -39,31 +41,31 @@
 | No | 優先 | シナリオ id | スクリプト | ステップ | 問題 | 状態 |
 |---|---|---|---|---|---|---|
 | 1 | 高 | support-angle-wing | w1-support-angle.mjs | S2〜S3 | 7 番が 2 番と 6 番の直線上(角 168°)に入り、三角形ができない。8m も自陣側へ下がっている | 済(2026-11-17) |
-| 2 | 高 | delay-outnumbered-box | w5-delay-outnumbered.mjs | S2〜S4 | 「ボールとゴールの間に立つ」3 番が、画面の赤い三角形の **外** にいる(3m 内側)。もどった 4 番が 9 番のゴール側に立てていない | 未 |
-| 3 | 高 | shoot-when-open-outside | w6-shoot.mjs | S4 | 「赤い三角形に相手がいない」と言うのに、相手 4 番が三角形の中(23.5,8.5)にいる | 未 |
-| 4 | 高 | counter-press-wing(+232) | w1-counter-press.mjs | S4 | 2 番 → 9 番の 17m のパスが相手 3 番(1.2m)と 8 番(0.7〜1.0m)を貫通 | 未 |
-| 5 | 高 | two-v-one-wing | w5-two-v-one.mjs | S3〜S4 | 「引きつけてからパス」なのに、キックの瞬間に相手 3 番がパスの線上 0.4m にいる(=通らない) | 未 |
+| 2 | 高 | delay-outnumbered-box | w5-delay-outnumbered.mjs | S2〜S4 | 「ボールとゴールの間に立つ」3 番が、画面の赤い三角形の **外** にいる(3m 内側)。もどった 4 番が 9 番のゴール側に立てていない | 済(2026-11-17) |
+| 3 | 高 | shoot-when-open-outside | w6-shoot.mjs | S4 | 「赤い三角形に相手がいない」と言うのに、相手 4 番が三角形の中(23.5,8.5)にいる | 済(2026-11-17) |
+| 4 | 高 | counter-press-wing(+232) | w1-counter-press.mjs | S4 | 2 番 → 9 番の 17m のパスが相手 3 番(1.2m)と 8 番(0.7〜1.0m)を貫通 | 済(2026-11-17) |
+| 5 | 高 | two-v-one-wing | w5-two-v-one.mjs | S3〜S4 | 「引きつけてからパス」なのに、キックの瞬間に相手 3 番がパスの線上 0.4m にいる(=通らない) | 済(2026-11-17) |
 | 6 | 高 | support-angle-center | w1-support-angle.mjs | S2〜S3 | 「相手の横を通った」パスが、相手 9 番の 1.0m 脇(キック時)→ 0.1m(到達時)。6 番がかげから出きれていない | 済(2026-11-17) |
-| 7 | 中 | counter-attack-deep | w2-counter-attack.mjs | S4〜S5 | 8 → 9 のパスが 4 番(0.8m)・2 番(0.5m)を貫通。9 → 7 のパスの到達時に 3 番が線上 0.2m | 未 |
-| 8 | 中 | dribble-or-pass-press | w3-attack.mjs | S4 | 9 → 8 のパスが相手 4 番の 0.6〜1.0m 脇 | 未 |
-| 9 | 中 | one-two-center | w2-one-two.mjs | S3〜S4 | 壁パスが相手 6 番の 0.9m 脇、リターンが相手 4 番の 1.2m 脇 | 未 |
-| 10 | 中 | switch-play-right | w3-build.mjs | S3 | 8 → 6 のパスの到達時に相手 6 番が線上 1.0m | 未 |
-| 11 | 中 | scan-before-wing | w5-scan-before.mjs | S5 | 7 → 9 のパスが相手 3 番の真上(0.0〜0.3m)を通る | 未 |
-| 12 | 中 | tuck-in-center | w5-tuck-in.mjs | S4 | カット直後の 3 → 8 のパスが、走りこんだ相手 7 番の上(0.4〜0.5m)を通る | 未 |
-| 13 | 中 | tuck-in-wing | w5-tuck-in.mjs | S2 | 「blocked」の線(7 番 → 9 番)の上にだれもいない。しぼった 2 番は 9 番より外側にいて、線をふさいでいない | 未 |
-| 14 | 中 | delay-outnumbered-own-half | w5-delay-outnumbered.mjs | S3 | 「blocked」の線(6 番 → 9 番、3.6m)の上にだれもいない。9 番が近すぎて、横パスが簡単に通る形 | 未 |
-| 15 | 中 | build-from-keeper-fw | w3-build.mjs | S2・S4 | 3 → 8 のパスが相手 7 番(0.7〜0.9m)を貫通。S2 の「blocked」線に 9 番が 1.8m と遠い | 未 |
-| 16 | 中 | run-behind-center | w1-run-behind.mjs | S3〜S4 | 「追いかける」相手 4 番が、9 番(左へ走る)と逆の右へ動く。スルーパスは 4 番の 1.4m 脇 | 未 |
-| 17 | 中 | two-v-one-center | w5-two-v-one.mjs | S3〜S4 | キック時・到達時とも相手 4 番がパスの 0.8m 脇 | 未 |
-| 18 | 中 | press-and-cover-center | w1-press-and-cover.mjs | S5 | 奪った直後の 4 → 9 のパスが、かわされた相手 6 番の真上(0.1〜0.2m)を通る | 未 |
-| 19 | 低 | one-two-wing | w2-one-two.mjs | S4 | リターンの到達時に相手 3 番が線上 0.7m | 未 |
-| 20 | 低 | corner-defense-right | w3-restart.mjs | S4・coachNote | クリア後の 6 → 9 のパスが相手 9 番の 0.7m 脇。coachNote は「9 は前に残す」だが、画面で前に残るのは 8 番 | 未 |
-| 21 | 低 | press-and-cover-wing(+232) | w1-press-and-cover.mjs | S5 | 奪った直後のパスが、かわされた相手 8 番の 1.3m 脇 | 未 |
-| 22 | 低 | support-angle-keeper | w3-build.mjs | S3 | パス到達時に相手 9 番が 1.3m | 未 |
-| 23 | 低 | build-from-keeper-catch / restart-shape-press(+232) | w3-build.mjs / w2-restart-shape.mjs | S3 | 「空いている 3 番」の 4〜5m に相手 7 番 | 未 |
-| 24 | 低 | counter-press-center | w1-counter-press.mjs | S2 | 「コースを消す」7・8 番が blocked の線から 1.85m と少し遠い | 未 |
-| 25 | 低 | recovery-run-near | w3-defend-transition.mjs | S5 | カット直後の 2 → 6 のパスが相手 8 番の 1.0m 脇 | 未 |
-| 26 | 低 | corner-attack-short | w5-corner-attack.mjs | S5 | 「フリー」の 9 番の 3.5〜4.5m に相手 4・2 番(許容範囲。直すなら相手を 1m ずつ離す) | 未 |
+| 7 | 中 | counter-attack-deep | w2-counter-attack.mjs | S4〜S5 | 8 → 9 のパスが 4 番(0.8m)・2 番(0.5m)を貫通。9 → 7 のパスの到達時に 3 番が線上 0.2m | 済(2026-11-17) |
+| 8 | 中 | dribble-or-pass-press | w3-attack.mjs | S4 | 9 → 8 のパスが相手 4 番の 0.6〜1.0m 脇 | 済(2026-11-17) |
+| 9 | 中 | one-two-center | w2-one-two.mjs | S3〜S4 | 壁パスが相手 6 番の 0.9m 脇、リターンが相手 4 番の 1.2m 脇 | 済(2026-11-17) |
+| 10 | 中 | switch-play-right | w3-build.mjs | S3 | 8 → 6 のパスの到達時に相手 6 番が線上 1.0m | 済(2026-11-17) |
+| 11 | 中 | scan-before-wing | w5-scan-before.mjs | S5 | 7 → 9 のパスが相手 3 番の真上(0.0〜0.3m)を通る | 済(2026-11-17) |
+| 12 | 中 | tuck-in-center | w5-tuck-in.mjs | S4 | カット直後の 3 → 8 のパスが、走りこんだ相手 7 番の上(0.4〜0.5m)を通る | 済(2026-11-17) |
+| 13 | 中 | tuck-in-wing | w5-tuck-in.mjs | S2 | 「blocked」の線(7 番 → 9 番)の上にだれもいない。しぼった 2 番は 9 番より外側にいて、線をふさいでいない | 済(2026-11-17) |
+| 14 | 中 | delay-outnumbered-own-half | w5-delay-outnumbered.mjs | S3 | 「blocked」の線(6 番 → 9 番、3.6m)の上にだれもいない。9 番が近すぎて、横パスが簡単に通る形 | 済(2026-11-17) |
+| 15 | 中 | build-from-keeper-fw | w3-build.mjs | S2・S4 | 3 → 8 のパスが相手 7 番(0.7〜0.9m)を貫通。S2 の「blocked」線に 9 番が 1.8m と遠い | 済(2026-11-17) |
+| 16 | 中 | run-behind-center | w1-run-behind.mjs | S3〜S4 | 「追いかける」相手 4 番が、9 番(左へ走る)と逆の右へ動く。スルーパスは 4 番の 1.4m 脇 | 済(2026-11-17) |
+| 17 | 中 | two-v-one-center | w5-two-v-one.mjs | S3〜S4 | キック時・到達時とも相手 4 番がパスの 0.8m 脇 | 済(2026-11-17) |
+| 18 | 中 | press-and-cover-center | w1-press-and-cover.mjs | S5 | 奪った直後の 4 → 9 のパスが、かわされた相手 6 番の真上(0.1〜0.2m)を通る | 済(2026-11-17) |
+| 19 | 低 | one-two-wing | w2-one-two.mjs | S4 | リターンの到達時に相手 3 番が線上 0.7m | 済(2026-11-17) |
+| 20 | 低 | corner-defense-right | w3-restart.mjs | S4・coachNote | クリア後の 6 → 9 のパスが相手 9 番の 0.7m 脇。coachNote は「9 は前に残す」だが、画面で前に残るのは 8 番 | 済(2026-11-17) |
+| 21 | 低 | press-and-cover-wing(+232) | w1-press-and-cover.mjs | S5 | 奪った直後のパスが、かわされた相手 8 番の 1.3m 脇 | 済(2026-11-17) |
+| 22 | 低 | support-angle-keeper | w3-build.mjs | S3 | パス到達時に相手 9 番が 1.3m | 済(2026-11-17) |
+| 23 | 低 | build-from-keeper-catch / restart-shape-press(+232) | w3-build.mjs / w2-restart-shape.mjs | S3 | 「空いている 3 番」の 4〜5m に相手 7 番 | 済(2026-11-17) |
+| 24 | 低 | counter-press-center | w1-counter-press.mjs | S2 | 「コースを消す」7・8 番が blocked の線から 1.85m と少し遠い | 済(2026-11-17) |
+| 25 | 低 | recovery-run-near | w3-defend-transition.mjs | S5 | カット直後の 2 → 6 のパスが相手 8 番の 1.0m 脇 | 済(2026-11-17) |
+| 26 | 低 | corner-attack-short | w5-corner-attack.mjs | S5 | 「フリー」の 9 番の 3.5〜4.5m に相手 4・2 番(許容範囲。直すなら相手を 1m ずつ離す) | 済(2026-11-17) |
 
 ## 4. 各項目の修正案
 
@@ -216,6 +218,21 @@
 
 ### No.26 corner-attack-short(低)
 - 直すなら `a4` S5 `24,5` → `23,5.5`、`a2` S5 `32,5.5` → `33.5,6`。
+
+### 一括対応の結果(2026-11-17・No.2〜5・7〜26)
+
+4 章の座標案をそのまま入れ、`review-geometry` と `validate` の警告が残った 9 件だけ次のように変えた(いずれも 4 章の「満たすべき条件」は保ったまま)。終了時の警告は、`validate` が 58 本すべて 0、`review-geometry` は two-v-one-wing S3・S4 の「空いている h7 の 2.9m に相手 a3」だけ。これは文章の「{h9}はだれもいない(フリー)」を判定器が h7 に結びつけた誤検知で、3 番が 7 番を止めに来た 2.9m は意図どおり(No.5 の条件)。
+
+- No.2 delay-outnumbered-box: `h4` を `20,34 20,47.5 21.5,56 21.5,58 22,57`(案だと S3 で 9 番と 1.4m に重なる。1m 外側・ゴール側へ。S2→S3 は 8.6m で速さの警告なし)。
+- No.3 shoot-when-open-outside: `a4` S5 を `19.5,7.8`(S5 で 9 番と 2.2m に重なるため。S4 の三角形の外は案どおり)。
+- No.5 two-v-one-wing: `a3` S4 を `13,12.5`(案の `13.5,13` は S4 で 7 番と 2.2m に重なる。パスの線から 3.1m)。
+- No.8 dribble-or-pass-press: `a4` S5 を `21.5,8.5`(S5 で 9 番と 2.2m に重なるため)。
+- No.9 one-two-center: `a6` S3 を `24.5,27.5`(案だと壁パス到達時に 1.5m ちょうどで警告が残る → 1.9m)。
+- No.19 one-two-wing: `a3` S4 を `12,20`(案の `11,21` は 9 番と 2.2m に重なる。リターンの線から 3.1m)。
+- No.20 corner-defense-right: `a9` S3・S4 を `31.5,61.5`・`31.5,60.5`(案の `30,59`・`30.5,58` は 7 番(30.5,59)と 0.5〜1.0m に重なる。6 → 9 のパスからは 3.5m)。coachNote の「8は前に残して」と `docs/SCENARIO_CATALOG.md` の E3 行も合わせた。
+- No.21 press-and-cover-wing(+232): `a8` S5 を `7,51.5`(案の `9.8,50.5` は奪った 4 番(10,50)と 0.5m に重なる。パスの線からは 3.0m)。
+- No.25 recovery-run-near: `a8` S4 も `12,37.5`(案は S5 だけだが、キック時の座標は S4 なので 1.0m のまま残っていた → 2.3m)。
+- No.13 tuck-in-wing は推奨案(blocked の線を `space("24,56", 4, 3, "ここをしめる")` に置きかえ)を採用。No.26 も「直すなら」の案を入れた。
 
 ## 5. 問題なしと判断したシナリオ(30 本)
 
