@@ -30,7 +30,7 @@ const KEYWORDS: Record<Keyword, { label: string; icon: string }> = {
 const COURSE_STAGES = [
   { upTo: 9, label: "ステップ1 まずはここから", lead: "見る・もらう・ドリブルとパス・2人で守る" },
   { upTo: 18, label: "ステップ2 切りかえとゴール前", lead: "取られた時・取った時・ゴール前のせめと守り" },
-  { upTo: 99, label: "ステップ3 場面ごとの動き", lead: "サイドチェンジ・キーパー・スローイン・コーナー" },
+  { upTo: 99, label: "ステップ3 場面ごとの動き", lead: "サイドチェンジ・キーパー・スローイン・コーナー・ポジションごとの動き" },
 ];
 const LIST_VIEW_KEY = "soccer-theory:list-view";
 const POSITION_KEY = "soccer-theory:position";

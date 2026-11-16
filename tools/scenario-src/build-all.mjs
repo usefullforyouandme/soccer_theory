@@ -34,6 +34,12 @@ const ORDER = [
   "w6-take-on.mjs",
   "w6-shoot.mjs",
   "w7-formation-232.mjs",
+  "w8-gk.mjs",
+  "w8-cb.mjs",
+  "w8-sb.mjs",
+  "w8-cm.mjs",
+  "w8-wm.mjs",
+  "w8-fw.mjs",
 ];
 
 const check = process.argv.includes("--check");
