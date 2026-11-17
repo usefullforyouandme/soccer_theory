@@ -33,7 +33,8 @@
 | BL-25 | データ | **ポジション別の新しい場面 11 本(BL-23)の幾何警告 4 件。** intercept-or-hold-front S5(パスの終わりに相手 6 番が 1.0m)、press-from-front-cb S2(「道をふさぐ」9 番がふさぐ線から約 6m 離れている)、receive-between-center S3(相手の間を通すパスの線上に相手 9 番)、stay-wide-center S5(パスの始まりに相手 3 番が 0.2m)。 | `node scripts/review-geometry.mjs`(2026-11-17。BL-24 の点検は 58 本が対象で、BL-23 の 11 本は未点検) | 該当スクリプト(`w8-cb`・`w8-fw`・`w8-cm`・`w8-wm`)の座標を直し、`review-geometry` の警告 0・`validate` 警告 0。 | 完了(2026-11-17)。4 本のお手本の座標だけを直した(相手 6 番は 4 番の前側へ、9 番は相手 4→2 の線上へ回りこむ、相手 9 番は 4 番の左から寄せる、相手 3 番は 7 番の前側から寄せる)。`review-geometry` 警告 0・`validate` 警告 0 |
 | BL-26 | 新規 | **第 9 弾(6 テーマ・11 本)。** E8 相手のフリーキックの守り・E9 味方のフリーキック・E10 相手のスローインの守り・A7 体をひらいて受けよう・A8 パスしたら動こう・C12 2人ではさもう。 | 利用者の依頼(2026-11-17)、カタログ 9.1 | `tools/scenario-src/w9-*.mjs`。E8↔E9・E10↔E2 を `counterpart` で組にする。完了条件は `validate` 警告 0・`review-geometry` 警告 0・`scenarios:check` 一致。 | 完了(2026-11-18)。11 本(A7・A8・E8〜E10 × 2、C12 × 1)。おすすめの順番 37〜42。validate 警告 0・review-geometry 0・scenarios:check 一致(80 本)。実機・子どもでの確認は BL-16・BL-20 で |
 | BL-27 | ビューア | **練習メニューの説明(仕組み)。** 試合の場面とは別に、コーンドリブル・2人のパスのやり方を ◎/× で見せる。`kind: drill`・`area`・`cone`/`gate`・あしもとのアップ図(`foot`)・人数の条件をゆるめる・指導メモを開いて表示・**ずかんと練習ページの切りかえ**(`#/` ↔ `#/practice`)・練習↔試合のリンク。 | 利用者の依頼(2026-11-18)、`docs/DRILL_PLAN.md` | DRILL_PLAN 3 章(切りかえは 3.1 節)。スキーマ・`types.ts`・`scenario-prompt.md`・`validate.mjs` を同じセッションで追従。お手本として D1 ジグザグドリブルを 1 本作る。完了条件は validate 警告 0・build 成功・390/1280px で表示確認・どちらの一覧からも 1 タップで切りかえられ、再生画面の「一覧へ」が元の方へ戻ること。 | 完了(2026-11-18)。スキーマ(`kind`・`area`・`practice`・`match`・`foot`・`cone`/`gate`・`drills[].id`・`dribble`/`pass`)、練習ページ `#/practice` と切りかえ、あしもと図、D1 `zigzag-dribble`(B8 サイドの1対1とリンク)。validate 81 本 警告 0・build 成功・390/1280px で確認 |
-| BL-28 | 新規 | **練習メニュー・ドリブル編(D2〜D4)。** 顔を上げてドリブル・コーンでターン・スピードを変える。 | `docs/DRILL_PLAN.md` 2 章 | BL-27 の後。1 セッションで 3 本。 | 未着手 |
+| BL-28 | 新規 | **練習メニュー・ドリブル編(D2〜D4)。** 顔を上げてドリブル・コーンでターン・スピードを変える。 | `docs/DRILL_PLAN.md` 2 章 | BL-27 の後。1 セッションで 3 本。 | 完了(2026-11-18)。`head-up-dribble`(scan-before とリンク)・`cone-turn`(take-on-box へ。take-on の drills は上限 3 件のため逆リンクなし)・`change-speed`(dribble-or-pass とリンク)。validate 警告 0 |
+| BL-30 | ビューア・新規 | **練習の足あとを全ステップ残す+ラダー(L1〜L3)。** 足あと(軸足・さわった足・その時のボール)を全ステップ分残す。区分 `agility`・`ladder`・`step` オーバーレイを追加し、1マス2歩・サイドステップ・グーパージャンプの 3 本。 | 利用者の依頼(2026-11-18)、`docs/DRILL_PLAN.md` 2 章 | スキーマ・`types.ts`・`scenario-prompt.md`・`validate.mjs` を追従。 | 完了(2026-11-18)。validate 警告 0・build 成功・scenarios:check 一致(87 本)。1280px で表示確認。指導者目線のレビューは別セッションで |
 | BL-29 | 新規 | **練習メニュー・パス編(P1〜P4)。** 向かい合ってインサイドパス・止めてからける・パスしたら動く・体をひらいて受ける。 | `docs/DRILL_PLAN.md` 2 章 | BL-27 の後。1 セッションで 4 本。A7・A8 などの試合の場面とリンクする。 | 未着手 |
 
 ### P2(教材の質を上げる。P1 の後)
@@ -77,6 +78,7 @@
 | 2026-11-17 | ポジション別の新しい場面 11 本(BL-23。36 テーマ・69 本) | `docs/POSITION_PLAN.md` 3 章 |
 | 2026-11-18 | 第 9 弾 11 本(BL-26。A7・A8・C12・E8〜E10。42 テーマ・80 本) | `docs/SCENARIO_CATALOG.md` 9.1 |
 | 2026-11-18 | 練習ページと練習メニューの仕組み(BL-27。ずかん ↔ 練習の切りかえ・コーン・あしもと図・お手本 D1 ジグザグドリブル) | `docs/DRILL_PLAN.md` 3 章 |
+| 2026-11-18 | 足あとを全ステップ残す・D2〜D4・ラダー L1〜L3(BL-28・BL-30。練習メニュー 7 本) | `docs/DRILL_PLAN.md` 2 章 |
 
 ## 4. 進め方の目安
 

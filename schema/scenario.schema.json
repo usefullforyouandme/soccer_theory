@@ -48,7 +48,7 @@
       "maxLength": 20
     },
     "category": {
-      "description": "種類。試合の場面は build=ボールを前へ運ぶ、attack=ゴールをねらう、defend=ボールを取る・守る、transition=切りかえ、restart=リスタート・キーパー。練習メニュー(kind: drill)は dribble=ドリブル、pass=パス",
+      "description": "種類。試合の場面は build=ボールを前へ運ぶ、attack=ゴールをねらう、defend=ボールを取る・守る、transition=切りかえ、restart=リスタート・キーパー。練習メニュー(kind: drill)は dribble=ドリブル、pass=パス、agility=ラダー(アジリティ)",
       "enum": [
         "build",
         "attack",
@@ -56,7 +56,8 @@
         "transition",
         "restart",
         "dribble",
-        "pass"
+        "pass",
+        "agility"
       ]
     },
     "group": {
@@ -636,6 +637,12 @@
               },
               {
                 "$ref": "#/$defs/gate"
+              },
+              {
+                "$ref": "#/$defs/ladder"
+              },
+              {
+                "$ref": "#/$defs/footStep"
               }
             ]
           }
@@ -999,6 +1006,81 @@
         "label": {
           "type": "string",
           "maxLength": 6
+        }
+      }
+    },
+    "ladder": {
+      "description": "ラダー(練習メニュー用)。a(入り口)から b(出口)へ、rungs マスのはしごを置く。コーンと同じく全ステップに同じものを書く",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "a",
+        "b",
+        "rungs"
+      ],
+      "properties": {
+        "type": {
+          "const": "ladder"
+        },
+        "a": {
+          "$ref": "#/$defs/point"
+        },
+        "b": {
+          "$ref": "#/$defs/point"
+        },
+        "rungs": {
+          "description": "マスの数",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "width": {
+          "description": "はしごの幅(m)。省略時は 0.5",
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 2
+        }
+      }
+    },
+    "footStep": {
+      "description": "足を着いた所(練習メニュー用。ラダーのステップなど)。このステップの間に着いた所を書く。前のステップの分は、ビューアが足あととして残す",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "x",
+        "y",
+        "foot"
+      ],
+      "properties": {
+        "type": {
+          "const": "step"
+        },
+        "x": {
+          "$ref": "#/$defs/x"
+        },
+        "y": {
+          "$ref": "#/$defs/y"
+        },
+        "foot": {
+          "enum": [
+            "left",
+            "right"
+          ]
+        },
+        "turn": {
+          "description": "つま先の向き(度)。0 = 画面の上、プラスは右回り",
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "judgement": {
+          "description": "bad = よくあるミスの足の着き方(赤くぬる)。省略時は good",
+          "enum": [
+            "good",
+            "bad"
+          ]
         }
       }
     }

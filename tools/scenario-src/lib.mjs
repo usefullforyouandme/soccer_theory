@@ -50,6 +50,14 @@ export const ball = (c, owner, motion, extra = {}) => ({ ...pt(c), owner, motion
 // 練習メニュー用: コーン・門・足の使い方
 export const cone = (c) => ({ type: "cone", ...pt(c) });
 export const gate = (a, b, label) => ({ type: "gate", a: pt(a), b: pt(b), ...(label ? { label } : {}) });
+/** ladder("2,8", "2,3", 10) = 入り口 → 出口に 10 マス。幅は width(m。省略時 0.5) */
+export const ladder = (a, b, rungs, width) => ({ type: "ladder", a: pt(a), b: pt(b), rungs, ...(width ? { width } : {}) });
+/** 足を着いた所。steps("L 1.9,7.7  R 2.1,7.7", { judgement: "bad" }) のように、L/R と座標を並べて書く(@角度 でつま先の向き。例: R 2.1,7.7@90) */
+export const steps = (spec, extra = {}) => spec.trim().split(/\s+(?=[LR]\s)/).map((tok) => {
+  const [lr, c] = tok.trim().split(/\s+/);
+  const [xy, turn] = c.split("@");
+  return { type: "step", ...pt(xy), foot: lr === "L" ? "left" : "right", ...(turn ? { turn: Number(turn) } : {}), ...extra };
+});
 /** foot("h7", "inside", { kick: "left", plant: 20, toward: "h8" | "3,4", judgement: "bad" })。kick の省略時は右足 */
 export const foot = (player, surface, { kick = "right", toward, ...extra } = {}) => ({
   player, kick, surface, ...extra, ...(toward ? { toward: typeof toward === "string" && toward.includes(",") ? pt(toward) : toward } : {}),

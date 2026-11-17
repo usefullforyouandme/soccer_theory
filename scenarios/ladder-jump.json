@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 2,
+  "kind": "drill",
+  "id": "ladder-jump",
+  "title": "ラダー・グーパージャンプ",
+  "questionTitle": "パーの時、どこに着く?",
+  "category": "agility",
+  "group": "ladder-jump",
+  "pattern": "両足でジャンプ",
+  "theme": "両足でリズムよくとび、グーはマスの中・パーはラダーの外にしっかり着く(体のバランスと、着いてすぐ動く力)",
+  "coachNote": "U-10 向けのアジリティ(すばやさ)の練習。両足でとび、グーは両足をそろえてマスの中、パーは両足を開いてラダーの外に着く。つま先で軽く着いて、すぐ次へとぶ(ひざを軽く曲げてやわらかく)。× はパーの開きが小さく、ラダーのはしをふむ例(ミスは足を着く場所の1点)。はしをふむとラダーがずれて、すべる原因にもなる。ぬけたらすぐコーチのパスを止める。",
+  "coachCue": "グー・パー・グー・パー!",
+  "targetGrade": "middle",
+  "question": "グー・パーでとんで進む。{h7}は、パーの時どこに足を着く?",
+  "keyPoint": "グーは中、パーは外!リズムよくとぼう",
+  "choices": [
+    {
+      "text": "ラダーのはしの上",
+      "correct": false,
+      "feedback": "はしの上は、ふんでずれたり、すべったりするよ。"
+    },
+    {
+      "text": "ラダーの外に、しっかり開いて",
+      "correct": true,
+      "feedback": "そう!外に開いて着くと、リズムよくとべるよ。"
+    },
+    {
+      "text": "マスの中に、かた足だけ",
+      "correct": false,
+      "feedback": "かた足だとバランスがくずれるよ。両足で着こう。"
+    }
+  ],
+  "area": {
+    "w": 3,
+    "h": 9
+  },
+  "practice": {
+    "setup": "1人1列。ラダー10マス(1マス45cm)。ラダーの先3m にコーチがボールを持って立つ",
+    "howTo": "1マス目はグー(両足をマスの中)、2マス目はパー(両足をラダーの外)と、交互に両足でとんで進む。ぬけたらコーチのパスをインサイドで止める。",
+    "reps": "片道で1本。4本 × 2セット",
+    "levelUp": "ゆっくり正しく → 速く → グー・グー・パー → 片足ケンケン(右・左)",
+    "safety": "着く時はひざを軽く曲げる。ラダーは平らな所に置き、ずれたら直してからスタートする"
+  },
+  "teams": {
+    "home": {
+      "name": "練習する人",
+      "formation": "0-0",
+      "players": [
+        {
+          "id": "h7",
+          "number": 7,
+          "role": "CM"
+        }
+      ]
+    },
+    "away": {
+      "name": "コーチ",
+      "formation": "0-0",
+      "players": [
+        {
+          "id": "a1",
+          "number": 1,
+          "role": "GK"
+        }
+      ]
+    }
+  },
+  "variants": {
+    "good": {
+      "label": "お手本",
+      "outcomeBanner": "リズムよくとべた!",
+      "outcomeTone": "chance",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がラダーの前に立った。先にはコーチ。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 1.5, "y": 8.8 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "グー・パー",
+          "explanation": "グーはマスの中、パーはラダーの外。両足で着く。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.5, "y": 6.6 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 7.775,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 7.775,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.1,
+              "y": 7.325,
+              "foot": "left",
+              "turn": -10
+            },
+            {
+              "type": "step",
+              "x": 1.9,
+              "y": 7.325,
+              "foot": "right",
+              "turn": 10
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 6.875,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 6.875,
+              "foot": "right"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "グー・パー",
+              "tone": "good"
+            }
+          ]
+        },
+        {
+          "phase": "firstPlay",
+          "title": "外に開く",
+          "explanation": "パーの時は、ラダーの外にしっかり開いて着く。",
+          "durationMs": 1400,
+          "players": {
+            "h7": { "x": 1.5, "y": 5.25 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.1,
+              "y": 6.425,
+              "foot": "left",
+              "turn": -10
+            },
+            {
+              "type": "step",
+              "x": 1.9,
+              "y": 6.425,
+              "foot": "right",
+              "turn": 10
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 5.975,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 5.975,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.1,
+              "y": 5.525,
+              "foot": "left",
+              "turn": -10
+            },
+            {
+              "type": "step",
+              "x": 1.9,
+              "y": 5.525,
+              "foot": "right",
+              "turn": 10
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "nextPlay",
+          "title": "リズムよく",
+          "explanation": "つま先で軽く着いて、すぐ次へとぶ。",
+          "durationMs": 1700,
+          "players": {
+            "h7": { "x": 1.5, "y": 3.1 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 5.075,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 5.075,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.1,
+              "y": 4.625,
+              "foot": "left",
+              "turn": -10
+            },
+            {
+              "type": "step",
+              "x": 1.9,
+              "y": 4.625,
+              "foot": "right",
+              "turn": 10
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 4.175,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 4.175,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.1,
+              "y": 3.725,
+              "foot": "left",
+              "turn": -10
+            },
+            {
+              "type": "step",
+              "x": 1.9,
+              "y": 3.725,
+              "foot": "right",
+              "turn": 10
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "outcome",
+          "title": "すぐボール",
+          "explanation": "ぬけたら、コーチのパスをすぐ止めた!",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.5, "y": 2.1 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1.5,
+            "owner": "h7",
+            "motion": "ground"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "arrow",
+              "kind": "pass",
+              "by": "a1"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "できた!",
+              "tone": "good"
+            }
+          ]
+        }
+      ]
+    },
+    "bad": {
+      "label": "よくあるミス",
+      "outcomeBanner": "ラダーをふんだ…",
+      "outcomeTone": "miss",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がラダーの前に立った。先にはコーチ。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 1.5, "y": 8.8 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "パーが小さい",
+          "explanation": "{h7}は、パーの開きが小さい。ラダーのはしをふんだ。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.5, "y": 6.6 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 7.775,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 7.775,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 6.875,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 6.875,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.25,
+              "y": 7.325,
+              "foot": "left",
+              "turn": -10,
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.75,
+              "y": 7.325,
+              "foot": "right",
+              "turn": 10,
+              "judgement": "bad"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "ふんだ",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "phase": "firstPlay",
+          "title": "またふんだ",
+          "explanation": "パーの時、また足がラダーのはしに乗った。",
+          "durationMs": 1400,
+          "players": {
+            "h7": { "x": 1.5, "y": 5.25 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 5.975,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 5.975,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.25,
+              "y": 6.425,
+              "foot": "left",
+              "turn": -10,
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.75,
+              "y": 6.425,
+              "foot": "right",
+              "turn": 10,
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.25,
+              "y": 5.525,
+              "foot": "left",
+              "turn": -10,
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.75,
+              "y": 5.525,
+              "foot": "right",
+              "turn": 10,
+              "judgement": "bad"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "nextPlay",
+          "title": "ずれそう",
+          "explanation": "はしをふむと、ラダーがずれてすべりやすい。",
+          "durationMs": 1700,
+          "players": {
+            "h7": { "x": 1.5, "y": 3.1 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 5.075,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 5.075,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.4,
+              "y": 4.175,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.6,
+              "y": 4.175,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.25,
+              "y": 4.625,
+              "foot": "left",
+              "turn": -10,
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.75,
+              "y": 4.625,
+              "foot": "right",
+              "turn": 10,
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.25,
+              "y": 3.725,
+              "foot": "left",
+              "turn": -10,
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.75,
+              "y": 3.725,
+              "foot": "right",
+              "turn": 10,
+              "judgement": "bad"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "outcome",
+          "title": "パーは外へ",
+          "explanation": "パスは止めたけど、パーはラダーの外に着こう。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.5, "y": 2.1 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1.5,
+            "owner": "h7",
+            "motion": "ground"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "arrow",
+              "kind": "pass",
+              "by": "a1"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

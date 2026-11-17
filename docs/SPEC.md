@@ -147,8 +147,9 @@ LLM で作ったデータにはミスが混ざる前提で、コミット前と 
 | 警告 | 選手の移動速度 > 6m/s、前ステップから全く動いていない選手、選手同士の重なり(< 2.5m)、**good と bad の Step 1 の不一致**、**矢印と実際の動きのずれ**(> 1.5m)、子どもに見えるすべての文字列の漢字(`middle` は 4 年生までに習わない漢字、`low` は漢字すべて)、表示文字数の超過(`middle` 40 字 / `low` 30 字) |
 
 - **練習メニュー**(`kind: "drill"`。設計は `docs/DRILL_PLAN.md`):コーンドリブル・2 人のパスのやり方を ◎/× で見せる。
-  - `category` は `dribble` / `pass`。`area`(幅 `w` × 奥行き `h` m)の中の座標(X=0〜w、Y=0〜h)で書き、選手は出てくる人だけ(0〜8 人。`teams.*.formation` は `0-0`)。`keyword`・`courseOrder` は使わない。
-  - オーバーレイに `cone`(コーン)と `gate`(コーン 2 本の門)。全ステップに同じものを書く(作成スクリプトでは `props`)。
+  - `category` は `dribble` / `pass` / `agility`(ラダー)。`area`(幅 `w` × 奥行き `h` m)の中の座標(X=0〜w、Y=0〜h)で書き、選手は出てくる人だけ(0〜8 人。`teams.*.formation` は `0-0`)。`keyword`・`courseOrder` は使わない。
+  - オーバーレイに `cone`(コーン)・`gate`(コーン 2 本の門)・`ladder`(ラダー。入り口 `a`→出口 `b`・マスの数 `rungs`・幅 `width`)。全ステップに同じものを書く(作成スクリプトでは `props`)。足を着いた所は `step`(`x`・`y`・`foot` = left / right・`turn`・`judgement`)を、そのステップの間に着いた分だけ書く。
+  - **足あとは全ステップ分を残す**: ピッチには、これまでの全ステップの「軸足」「ボールにさわった足(当てる面を黄色、ミスは赤)」「さわった時のボール(点線の丸)」と `step` の足あとを残す(前のステップの分はうすく)。さわっていない時のボールの位置は小さな点。出てくる人全員の動いた線も残す。
   - ステップに任意の `foot`(さわる選手・けり足 `kick`・当てる所 `surface` = inside / outside / sole / instep / toe・軸足の向き `plant`(度)・送る先 `toward`・`judgement`)。
   - 結末は good = `chance`(◎ できた!)、bad = `miss`(△ 残念…)。
   - `practice`(準備 `setup`・やり方 `howTo`・回数 `reps`・`levelUp`・`safety`。大人向け)と、試合の場面へのリンク `match: { id }`。試合の場面からは `drills[].id` に練習の id を書くとリンクになる。

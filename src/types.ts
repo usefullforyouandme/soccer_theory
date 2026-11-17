@@ -8,8 +8,8 @@ export type Grade = "low" | "middle" | "high";
 /** 結末の種類: チャンス(緑)/ ピンチ(赤)/ 残念(灰。チャンスを逃した・相手ボールになった) */
 export type OutcomeTone = "chance" | "pinch" | "miss";
 export type GoalSide = "home" | "away";
-/** 種類: ボールを前へ運ぶ / ゴールをねらう / ボールを取る・守る / 切りかえ / リスタート・キーパー(試合の場面)、ドリブル / パス(練習メニュー) */
-export type Category = "build" | "attack" | "defend" | "transition" | "restart" | "dribble" | "pass";
+/** 種類: ボールを前へ運ぶ / ゴールをねらう / ボールを取る・守る / 切りかえ / リスタート・キーパー(試合の場面)、ドリブル / パス / ラダー(練習メニュー) */
+export type Category = "build" | "attack" | "defend" | "transition" | "restart" | "dribble" | "pass" | "agility";
 /** 試合の場面 / 練習メニューの説明 */
 export type ScenarioKind = "match" | "drill";
 /** ボールに当てる所: 足の内がわ / 外がわ / うら / くつひもの所 / つま先 */
@@ -107,6 +107,24 @@ export interface GateOverlay {
   label?: string;
 }
 
+/** ラダー(練習メニュー用)。a(入り口)から b(出口)へ、rungs マスのはしごを置く */
+export interface LadderOverlay {
+  type: "ladder";
+  a: Point;
+  b: Point;
+  rungs: number;
+  /** はしごの幅(m)。省略時は 0.5 */
+  width?: number;
+}
+
+/** 足を着いた所(練習メニュー用)。turn はつま先の向き(度。0 = 画面の上、プラスは右回り) */
+export interface StepOverlay extends Point {
+  type: "step";
+  foot: "left" | "right";
+  turn?: number;
+  judgement?: Judgement;
+}
+
 export type Overlay =
   | ArrowOverlay
   | PassLaneOverlay
@@ -117,7 +135,9 @@ export type Overlay =
   | ShotConeOverlay
   | LookOverlay
   | ConeOverlay
-  | GateOverlay;
+  | GateOverlay
+  | LadderOverlay
+  | StepOverlay;
 
 /** 足の使い方(練習メニュー用)。説明欄に「あしもと」図、ピッチに軸足の足あとを出す */
 export interface Foot {

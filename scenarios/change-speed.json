@@ -1,0 +1,466 @@
+{
+  "schemaVersion": 2,
+  "kind": "drill",
+  "id": "change-speed",
+  "title": "スピードを変える",
+  "questionTitle": "おにをふりきるには、どう運ぶ?",
+  "category": "dribble",
+  "group": "change-speed",
+  "pattern": "門とおに1人",
+  "theme": "門まではゆっくり運び、門をぬけたら一気にスピードを上げる(相手をふりきるための、速さの変え方)",
+  "coachNote": "U-10 向け。門の手前までは小さなタッチでゆっくり運び、門をぬけた瞬間に足の甲で少し大きめに前へ押し出してダッシュする。速さの差が大きいほど、相手をふりきれる。ダッシュの時はタッチを大きくしてよいが、ボールに追いつける大きさまで。× はずっと同じ速さで運び、おにに追いつかれる例(ミスは速さを変えないことの1点)。試合では、ドリブルで運んでから相手をふりきる時の土台になる(▶ 試合ではこの場面)。",
+  "coachCue": "ゆっくり…今だ、ダッシュ!",
+  "targetGrade": "middle",
+  "question": "門をぬけると、横のおにが追いかけてくる。{h7}は、どう運ぶ?",
+  "keyPoint": "ゆっくり運んで、門をぬけたら一気にダッシュ!",
+  "choices": [
+    {
+      "text": "ずっと同じ速さで運ぶ",
+      "correct": false,
+      "feedback": "同じ速さだと、おにが追いつきやすいよ。"
+    },
+    {
+      "text": "門まではゆっくり、ぬけたらダッシュ",
+      "correct": true,
+      "feedback": "そう!急に速くなると、おにをふりきれるよ。"
+    },
+    {
+      "text": "最初から全力で走る",
+      "correct": false,
+      "feedback": "最初から全力だと、ボールが足からはなれやすいよ。"
+    }
+  ],
+  "area": {
+    "w": 8,
+    "h": 18
+  },
+  "practice": {
+    "setup": "1人1球+おに1人。スタートから8m 先に門(幅2.4m)、門の横3m におに(よこ8m × たて18m)",
+    "howTo": "門まではゆっくり運ぶ。門をぬけたらダッシュして、ゴールの線まで運ぶ。おには、ドリブルする人が門をぬけたら追いかけて、体にタッチする。",
+    "reps": "1本ずつ交代で、4本 × 2セット(おにも交代)",
+    "levelUp": "おにはゆっくり追う → 本気で追う → 門の位置を毎回変える → おにがボールを取りにくる",
+    "safety": "おには後ろから押さない(体にタッチするだけ)。ゴールの線の先は3m 以上あける"
+  },
+  "match": {
+    "id": "dribble-or-pass-open"
+  },
+  "teams": {
+    "home": {
+      "name": "練習する人",
+      "formation": "0-0",
+      "players": [
+        {
+          "id": "h7",
+          "number": 7,
+          "role": "CM"
+        }
+      ]
+    },
+    "away": {
+      "name": "おに",
+      "formation": "0-0",
+      "players": [
+        {
+          "id": "a9",
+          "number": 9,
+          "role": "FW"
+        }
+      ]
+    }
+  },
+  "variants": {
+    "good": {
+      "label": "お手本",
+      "outcomeBanner": "おにをふりきった!",
+      "outcomeTone": "chance",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がボールを持った。門の横にはおにがいる。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 4, "y": 16.8 },
+            "a9": { "x": 7.2, "y": 10.6 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 16.2,
+            "owner": "h7",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "ゆっくり運ぶ",
+          "explanation": "小さくさわって、ゆっくり門へ向かう。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 4, "y": 14.4 },
+            "a9": { "x": 7.2, "y": 10.5 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 13.8,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "ゆっくり",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "firstPlay",
+          "title": "門の手前",
+          "explanation": "まだゆっくり。おにはまだ動かない。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 4, "y": 11.2 },
+            "a9": { "x": 7.2, "y": 10.4 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 10.6,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "nextPlay",
+          "title": "ぬけたらダッシュ",
+          "explanation": "門をぬけた!少し大きめにおして、一気にダッシュ。",
+          "durationMs": 1400,
+          "players": {
+            "h7": { "x": 4, "y": 6.2 },
+            "a9": { "x": 6.4, "y": 8 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 5.3,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "a9"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "今だ!",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "outcome",
+          "title": "ふりきった!",
+          "explanation": "急に速くなったので、おには追いつけない!",
+          "durationMs": 1400,
+          "players": {
+            "h7": { "x": 4, "y": 2 },
+            "a9": { "x": 5.4, "y": 5 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 1.2,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "a9"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "できた!",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        }
+      ]
+    },
+    "bad": {
+      "label": "よくあるミス",
+      "outcomeBanner": "おにに追いつかれた…",
+      "outcomeTone": "miss",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がボールを持った。門の横にはおにがいる。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 4, "y": 16.8 },
+            "a9": { "x": 7.2, "y": 10.6 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 16.2,
+            "owner": "h7",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "ゆっくり運ぶ",
+          "explanation": "小さくさわって、ゆっくり門へ向かう。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 4, "y": 14.4 },
+            "a9": { "x": 7.2, "y": 10.5 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 13.8,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "ゆっくり",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "firstPlay",
+          "title": "同じ速さ",
+          "explanation": "{h7}は、ずっと同じ速さで運んでいる。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 4, "y": 11.8 },
+            "a9": { "x": 7.2, "y": 10.4 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 11.2,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "nextPlay",
+          "title": "門をぬけても",
+          "explanation": "門をぬけても、速さが変わらない。おにが来た。",
+          "durationMs": 1400,
+          "players": {
+            "h7": { "x": 4, "y": 9.4 },
+            "a9": { "x": 6, "y": 8.6 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 8.8,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7",
+              "judgement": "bad"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "a9"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "同じ速さ",
+              "tone": "bad"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "outcome",
+          "title": "追いつかれた",
+          "explanation": "おににタッチされた。ぬけたらダッシュしよう。",
+          "durationMs": 1400,
+          "players": {
+            "h7": { "x": 4, "y": 7 },
+            "a9": { "x": 5.3, "y": 6.6 }
+          },
+          "ball": {
+            "x": 4,
+            "y": 6.4,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 2.8, "y": 10 },
+              "b": { "x": 5.2, "y": 10 },
+              "label": "ここから"
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "a9"
+            },
+            {
+              "type": "callout",
+              "player": "a9",
+              "text": "タッチ!",
+              "tone": "bad"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        }
+      ]
+    }
+  }
+}

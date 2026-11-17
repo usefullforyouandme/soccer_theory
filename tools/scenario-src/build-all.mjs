@@ -46,6 +46,12 @@ const ORDER = [
   "w9-pass-and-move.mjs",
   "w9-double-team.mjs",
   "p-dribble-zigzag.mjs",
+  "p-dribble-headup.mjs",
+  "p-dribble-turn.mjs",
+  "p-dribble-speed.mjs",
+  "p-ladder-two-step.mjs",
+  "p-ladder-side-step.mjs",
+  "p-ladder-jump.mjs",
 ];
 
 const check = process.argv.includes("--check");

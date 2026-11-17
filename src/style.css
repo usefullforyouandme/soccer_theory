@@ -1714,6 +1714,56 @@ summary:focus-visible {
 .ov-foot.bad {
   fill: rgba(255, 120, 110, 0.85);
 }
+/* 練習メニュー: ボールにさわった足(当てる面を黄色でぬる)と、その時のボール。前のステップの分はうすく残す */
+.touch-foot-body {
+  fill: #cfe0ff;
+  stroke: #1d2a1f;
+  stroke-width: 1.2;
+}
+.touch-foot-mark {
+  fill: #ffd400;
+}
+.touch-foot.bad .touch-foot-mark {
+  fill: #ff5a4f;
+}
+.touch-ball {
+  fill: rgba(255, 255, 255, 0.85);
+  stroke: #1d2a1f;
+  stroke-width: 0.16;
+  stroke-dasharray: 0.45 0.25;
+}
+.touch-ball.bad {
+  stroke: #c0281e;
+}
+.touch.past {
+  opacity: 0.75;
+}
+/* ラダー */
+.ladder-rail {
+  stroke: #ffd400;
+  stroke-width: 0.35;
+}
+.ladder-rung {
+  stroke: #ffd400;
+  stroke-width: 0.3;
+}
+/* 足を着いた所(ラダーなど)。右足は青、左足は白。前のステップの分はうすく残す */
+.step-foot {
+  stroke: #1d2a1f;
+  stroke-width: 1.2;
+}
+.step-foot.right {
+  fill: #cfe0ff;
+}
+.step-foot.left {
+  fill: #ffffff;
+}
+.step-foot.bad {
+  fill: rgba(255, 120, 110, 0.9);
+}
+.step-foot.past {
+  opacity: 0.7;
+}
 
 /* 説明欄の「あしもと」図 */
 .caption.has-foot {

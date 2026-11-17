@@ -92,10 +92,11 @@
 
 # 練習メニュー(`kind: "drill"`)を作る時
 試合の場面ではなく、コーンドリブル・2人のパスなどの**やり方**を ◎/× で見せる(`docs/DRILL_PLAN.md`)。上の「ピッチ座標系」「チーム」とは次の点が違う。それ以外(5 ステップ・1 論点・文章のルール)は同じ。
-- `"kind": "drill"`、`category` は `dribble` か `pass`。`keyword`・`courseOrder`・`counterpart`・`drills` は書かない。
+- `"kind": "drill"`、`category` は `dribble` / `pass` / `agility`(ラダー)。`keyword`・`courseOrder`・`counterpart`・`drills` は書かない。
 - `area`(`{ "w": 6, "h": 14 }` のような広さ m)を書き、座標は X=0〜w、Y=0〜h(Y=0 が画面の上)の中にする。ゴール・オフサイドはないので `offsideLine`・`shotCone` は使わない。
 - 選手は出てくる人だけ(例: 練習する人 1 人、コーチ 1 人)。`teams.*.formation` は `"0-0"`、`teams.*.name` は「練習する人」「コーチ」など。相手がいなければ `players` は空の配列。
-- コーンは `{ "type": "cone", "x": 3, "y": 11 }`、門は `{ "type": "gate", "a": {…}, "b": {…} }`。置いたままの道具なので、**全ステップの `overlays` に同じものを書く**。
+- コーンは `{ "type": "cone", "x": 3, "y": 11 }`、門は `{ "type": "gate", "a": {…}, "b": {…} }`。置いたままの道具なので、**全ステップの `overlays` に同じものを書く**。ラダーは `{ "type": "ladder", "a": {…入り口}, "b": {…出口}, "rungs": 10 }`(任意で `width` m。省略時 0.5)も同じ。
+- 足を着いた所(ラダーなど)は `{ "type": "step", "x": 1.9, "y": 8.2, "foot": "left" }`(任意で `turn` = つま先の向き 度・0 が画面の上、`judgement: "bad"`)を、**そのステップの間に着いた所だけ**書く。前のステップの分はビューアが足あととして残す。
 - 足の使い方はステップの `foot`(`{ "player": "h7", "kick": "right", "surface": "inside" }`。当てる所は `inside` / `outside` / `sole` / `instep` / `toe`、任意で `plant`(軸足の向き。度・0 = 送る方向)・`toward`・`judgement: "bad"`)。そのステップの始めにボールにさわったとして描く。右足を基本にし、`coachNote` に「左足でも同じ」と書く。
 - ボールは足からの実際の距離で描く(ドリブル中も 2m 以内)。結末は good が `chance`(◎ できた!)、bad は `"outcomeTone": "miss"`(△ 残念…)。
 - 指導者向けに `practice`(`setup` 準備・`howTo` やり方・`reps` 回数・任意で `levelUp`・`safety`。漢字可)と、`coachCue`(声かけ)を書く。この技術を使う試合の場面があれば `match: { "id": "<試合のシナリオ>" }`。

@@ -1,0 +1,472 @@
+{
+  "schemaVersion": 2,
+  "kind": "drill",
+  "id": "cone-turn",
+  "title": "コーンでターン",
+  "questionTitle": "コーンで、どう向きを変える?",
+  "category": "dribble",
+  "group": "cone-turn",
+  "pattern": "コーン1本でもどる",
+  "theme": "コーンの手前でボールを止めずに切り返し、向きを変えたらすぐ加速する(1対1で相手をかわすための足もとの技術)",
+  "coachNote": "U-10 向け。コーンの約1m 手前で、右足の内側(インサイド)でボールを後ろへ切り返し、体の向きを変えたら足の甲で前へ押し出して加速する。切り返す前の最後のタッチを小さくして、ボールを止めすぎないのがコツ。× はコーンのまわりを大回りして時間がかかる例(ミスは向きの変え方の1点)。足のうらで引く・アウトサイドで切り返すなど、やり方を変えてもよい。左足でも同じ。試合では、1対1で相手の前で向きを変えてかわす土台になる(▶ 試合ではこの場面)。",
+  "coachCue": "手前で切り返して、すぐダッシュ!",
+  "targetGrade": "middle",
+  "question": "上のコーンまで運んで、もどってくる。{h7}は、どこで向きを変える?",
+  "keyPoint": "コーンの手前で切り返して、すぐダッシュ!",
+  "choices": [
+    {
+      "text": "コーンの手前で切り返す",
+      "correct": true,
+      "feedback": "そう!手前で切り返すと、すぐもどれるよ。"
+    },
+    {
+      "text": "コーンのまわりを大きく回る",
+      "correct": false,
+      "feedback": "大きく回ると、遠回りで時間がかかるよ。"
+    },
+    {
+      "text": "コーンの前で止まって考える",
+      "correct": false,
+      "feedback": "止まると、もう一度動き出すのに時間がかかるよ。"
+    }
+  ],
+  "area": {
+    "w": 6,
+    "h": 15
+  },
+  "practice": {
+    "setup": "1人1球。スタートの門(幅2.4m)から10m 先にコーン1本(よこ6m × たて15m)。列を2〜3つ作る",
+    "howTo": "スタートの門からコーンへ運び、コーンの手前で切り返して、スタートの門へダッシュでもどる。切り返す足と面(内側・外側・足のうら)をコーチが決める。",
+    "reps": "1往復で1本。4本 × 2セット(右足・左足で1セットずつ)",
+    "levelUp": "インサイドで切り返し → アウトサイド → 足のうらで引く → コーチの合図でターン → タイムを計る",
+    "safety": "もどってくる人と、次に出る人がぶつからないよう、門をぬけてから次の人がスタートする"
+  },
+  "match": {
+    "id": "take-on-box"
+  },
+  "teams": {
+    "home": {
+      "name": "練習する人",
+      "formation": "0-0",
+      "players": [
+        {
+          "id": "h7",
+          "number": 7,
+          "role": "CM"
+        }
+      ]
+    },
+    "away": {
+      "name": "コーチ",
+      "formation": "0-0",
+      "players": []
+    }
+  },
+  "variants": {
+    "good": {
+      "label": "お手本",
+      "outcomeBanner": "すぐにもどれた!",
+      "outcomeTone": "chance",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がスタートの門の前に立った。上にコーンがある。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 3, "y": 14.4 }
+          },
+          "ball": {
+            "x": 3,
+            "y": 13.8,
+            "owner": "h7",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "コーンへ運ぶ",
+          "explanation": "くつひもの所で小さくさわって、コーンへ向かう。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 3, "y": 9.6 }
+          },
+          "ball": {
+            "x": 3,
+            "y": 9,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "firstPlay",
+          "title": "最後は小さく",
+          "explanation": "コーンが近い。最後のタッチは小さくして、止まらない。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 3, "y": 5.4 }
+          },
+          "ball": {
+            "x": 3,
+            "y": 4.6,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "小さく",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "nextPlay",
+          "title": "手前で切り返す",
+          "explanation": "コーンの手前で、内がわで後ろへ切り返した。",
+          "durationMs": 1300,
+          "players": {
+            "h7": { "x": 3.4, "y": 4.4 }
+          },
+          "ball": {
+            "x": 3.2,
+            "y": 5,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "くるっ",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "inside",
+            "plant": 60,
+            "toward": { "x": 3, "y": 10 }
+          }
+        },
+        {
+          "phase": "outcome",
+          "title": "すぐダッシュ",
+          "explanation": "向きを変えたら、すぐダッシュ。スタートの門へもどれた!",
+          "durationMs": 2000,
+          "players": {
+            "h7": { "x": 3, "y": 11.8 }
+          },
+          "ball": {
+            "x": 3,
+            "y": 12.4,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "できた!",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        }
+      ]
+    },
+    "bad": {
+      "label": "よくあるミス",
+      "outcomeBanner": "時間がかかった…",
+      "outcomeTone": "miss",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がスタートの門の前に立った。上にコーンがある。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 3, "y": 14.4 }
+          },
+          "ball": {
+            "x": 3,
+            "y": 13.8,
+            "owner": "h7",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "コーンへ運ぶ",
+          "explanation": "くつひもの所で小さくさわって、コーンへ向かう。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 3, "y": 9.6 }
+          },
+          "ball": {
+            "x": 3,
+            "y": 9,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        },
+        {
+          "phase": "firstPlay",
+          "title": "コーンの横へ",
+          "explanation": "{h7}は、コーンの横へふくらんでいった。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 4.4, "y": 3.8 }
+          },
+          "ball": {
+            "x": 4.4,
+            "y": 3.2,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7",
+              "judgement": "bad"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "大回り",
+              "tone": "bad"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "outside"
+          }
+        },
+        {
+          "phase": "nextPlay",
+          "title": "コーンを回る",
+          "explanation": "コーンのまわりを、大きくぐるっと回っている。",
+          "durationMs": 1300,
+          "players": {
+            "h7": { "x": 2.6, "y": 0.9 }
+          },
+          "ball": {
+            "x": 2,
+            "y": 1.4,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7",
+              "judgement": "bad"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "inside"
+          }
+        },
+        {
+          "phase": "outcome",
+          "title": "まだもどれない",
+          "explanation": "遠回りしたので、まだ門にもどれない。手前で切り返そう。",
+          "durationMs": 2000,
+          "players": {
+            "h7": { "x": 1.6, "y": 5.4 }
+          },
+          "ball": {
+            "x": 1.6,
+            "y": 6,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "gate",
+              "a": { "x": 1.8, "y": 13.4 },
+              "b": { "x": 4.2, "y": 13.4 },
+              "label": "スタート"
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "おそい…",
+              "tone": "bad"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "instep"
+          }
+        }
+      ]
+    }
+  }
+}

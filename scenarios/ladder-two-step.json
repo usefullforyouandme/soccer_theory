@@ -1,0 +1,539 @@
+{
+  "schemaVersion": 2,
+  "kind": "drill",
+  "id": "ladder-two-step",
+  "title": "ラダー・1マス2歩",
+  "questionTitle": "ラダー、どう進む?",
+  "category": "agility",
+  "group": "ladder-two-step",
+  "pattern": "前向き",
+  "theme": "ラダーの1マスに両足を1回ずつ、細かくすばやく着く(試合で急に止まる・向きを変えるための、足の速い動き)",
+  "coachNote": "U-10 向けのアジリティ(すばやさ)の練習。1マスに左右1回ずつ、かかとをつけずにつま先(母指球)で細かく着く。うでもふって、リズムよく進む。× は大またでマスをとばす例(ミスは歩はばの1点)。速さより、正しい足の運びとリズムを先に身につける。ラダーをぬけたらすぐコーチのパスを止めて、足の動きをボールにつなげる。ラダーが無い時は、地面にテープやチョークでマスをかいてもよい。",
+  "coachCue": "トン・トン、細かく!",
+  "targetGrade": "middle",
+  "question": "ラダーを前へ進む。{h7}は、どんな足の運びで進む?",
+  "keyPoint": "1マスに2歩、つま先で細かく速く!",
+  "choices": [
+    {
+      "text": "大またで、マスをとばして進む",
+      "correct": false,
+      "feedback": "大まただと、足が細かく動かないよ。"
+    },
+    {
+      "text": "1マスに両足を1回ずつ、細かく進む",
+      "correct": true,
+      "feedback": "そう!1マスに2歩、細かく速く動かそう。"
+    },
+    {
+      "text": "1歩ずつ止まって、足もとを見る",
+      "correct": false,
+      "feedback": "止まると、リズムが切れてしまうよ。"
+    }
+  ],
+  "area": {
+    "w": 3,
+    "h": 9
+  },
+  "practice": {
+    "setup": "1人1列。ラダー10マス(1マス45cm)。ラダーの先3m にコーチがボールを持って立つ",
+    "howTo": "1マスに左足・右足の順で1回ずつ着いて、前へ進む。ラダーをぬけたらコーチがパスを出すので、インサイドで止める。",
+    "reps": "片道で1本。4本 × 2セット(1本ごとに次の人と交代)",
+    "levelUp": "ゆっくり正しく → 速く → 右足から始める → 後ろ向き → ぬけたらすぐドリブル",
+    "safety": "前の人がラダーをぬけてからスタートする。ラダーのはしをふんですべらないよう、平らな所に置く"
+  },
+  "teams": {
+    "home": {
+      "name": "練習する人",
+      "formation": "0-0",
+      "players": [
+        {
+          "id": "h7",
+          "number": 7,
+          "role": "CM"
+        }
+      ]
+    },
+    "away": {
+      "name": "コーチ",
+      "formation": "0-0",
+      "players": [
+        {
+          "id": "a1",
+          "number": 1,
+          "role": "GK"
+        }
+      ]
+    }
+  },
+  "variants": {
+    "good": {
+      "label": "お手本",
+      "outcomeBanner": "細かく進めた!",
+      "outcomeTone": "chance",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がラダーの前に立った。先にはコーチ。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 1.5, "y": 8.8 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "1マスに2歩",
+          "explanation": "1マスに左・右と1回ずつ。つま先で細かく着く。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.5, "y": 6.6 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 7.775,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 7.775,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 7.325,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 7.325,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 6.875,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 6.875,
+              "foot": "right"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "トン・トン",
+              "tone": "good"
+            }
+          ]
+        },
+        {
+          "phase": "firstPlay",
+          "title": "リズムよく",
+          "explanation": "うでもふって、同じリズムで進む。",
+          "durationMs": 1400,
+          "players": {
+            "h7": { "x": 1.5, "y": 5.25 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 6.425,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 6.425,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 5.975,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 5.975,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 5.525,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 5.525,
+              "foot": "right"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "nextPlay",
+          "title": "最後まで細かく",
+          "explanation": "最後のマスまで、1マスに2歩。足がよく動いている。",
+          "durationMs": 1700,
+          "players": {
+            "h7": { "x": 1.5, "y": 3.1 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 5.075,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 5.075,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 4.625,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 4.625,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 4.175,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 4.175,
+              "foot": "right"
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 3.725,
+              "foot": "left"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 3.725,
+              "foot": "right"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "outcome",
+          "title": "すぐボール",
+          "explanation": "ぬけたら、コーチのパスをすぐ止めた!",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.5, "y": 2.1 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1.5,
+            "owner": "h7",
+            "motion": "ground"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "arrow",
+              "kind": "pass",
+              "by": "a1"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "できた!",
+              "tone": "good"
+            }
+          ]
+        }
+      ]
+    },
+    "bad": {
+      "label": "よくあるミス",
+      "outcomeBanner": "マスをとばした…",
+      "outcomeTone": "miss",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がラダーの前に立った。先にはコーチ。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 1.5, "y": 8.8 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "大また",
+          "explanation": "{h7}は大またで、マスを1つとばして進んだ。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.5, "y": 6.6 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 7.775,
+              "foot": "left",
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 6.875,
+              "foot": "right",
+              "judgement": "bad"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "大また",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "phase": "firstPlay",
+          "title": "またとばす",
+          "explanation": "1マスに1歩だけ。足が細かく動いていない。",
+          "durationMs": 1400,
+          "players": {
+            "h7": { "x": 1.5, "y": 4.8 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 5.975,
+              "foot": "left",
+              "judgement": "bad"
+            },
+            {
+              "type": "step",
+              "x": 1.62,
+              "y": 5.075,
+              "foot": "right",
+              "judgement": "bad"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "nextPlay",
+          "title": "すぐ終わった",
+          "explanation": "すぐぬけたけど、細かい足の練習にならなかった。",
+          "durationMs": 1700,
+          "players": {
+            "h7": { "x": 1.5, "y": 2.9 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1,
+            "owner": "a1",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "step",
+              "x": 1.38,
+              "y": 4.175,
+              "foot": "left",
+              "judgement": "bad"
+            },
+            {
+              "type": "arrow",
+              "kind": "run",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "outcome",
+          "title": "1マスに2歩で",
+          "explanation": "パスは止めたけど、ラダーは1マスに2歩で進もう。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.5, "y": 2.1 },
+            "a1": { "x": 1.5, "y": 0.5 }
+          },
+          "ball": {
+            "x": 1.5,
+            "y": 1.5,
+            "owner": "h7",
+            "motion": "ground"
+          },
+          "overlays": [
+            {
+              "type": "ladder",
+              "a": { "x": 1.5, "y": 8 },
+              "b": { "x": 1.5, "y": 3.5 },
+              "rungs": 10
+            },
+            {
+              "type": "arrow",
+              "kind": "pass",
+              "by": "a1"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

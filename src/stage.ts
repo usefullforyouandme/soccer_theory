@@ -1,7 +1,7 @@
 // 1パターン(おてほん/ミス)分のピッチ描画。時間の管理は main.ts が行い、ここは「ステップ i の進捗 t」の1コマを描く
 import { GLOSSARY } from "./glossary";
 import type {
-  ArrowOverlay, Ball, Foot, FootSurface, GoalSide, Grade, LookOverlay, OutcomeTone, Overlay, PlayerId, Point, Role, Scenario, ShotConeOverlay, Step, Variant, VariantKey,
+  ArrowOverlay, Ball, Foot, FootSurface, GoalSide, Grade, LadderOverlay, LookOverlay, OutcomeTone, Overlay, PlayerId, Point, Role, Scenario, ShotConeOverlay, Step, StepOverlay, Variant, VariantKey,
 } from "./types";
 
 const NS = "http://www.w3.org/2000/svg";
@@ -15,6 +15,16 @@ const GOAL_LINE_Y: Record<GoalSide, number> = { away: 0, home: 68 };
 const BANNER_SUB: Record<OutcomeTone, string> = { chance: "◎ チャンス!", pinch: "× ピンチ!", miss: "△ 残念…" };
 const DRILL_BANNER_SUB: Record<OutcomeTone, string> = { ...BANNER_SUB, chance: "◎ できた!" };
 const CONE_R = 0.9;
+const LADDER_W = 0.5; // ラダーの幅(m)の省略時
+const FOOT_K = 0.11; // ピッチの上の足あとの大きさ(FOOT_PATH の倍率)
+/** ボールにさわった足のつま先の向き(送る方向からの角度。右足の時。左足は左右反転)と、ボールの中心からの下がり具合 */
+const TOUCH_POSE: Record<FootSurface, { turn: number; back: number }> = {
+  inside: { turn: 90, back: BALL_R + 0.55 },
+  outside: { turn: -75, back: BALL_R + 0.55 },
+  instep: { turn: 0, back: BALL_R + 0.7 },
+  toe: { turn: 0, back: BALL_R + 1.15 },
+  sole: { turn: 0, back: 0 },
+};
 const TOKEN = /\{([ha][1-9][0-9]?)\}/g;
 let stageSeq = 0;
 
@@ -193,6 +203,8 @@ function fitVariant(v: Variant, f: Fit): Variant {
       case "look": return typeof o.at === "string" ? o : { ...o, at: P(o.at) };
       case "cone": return { ...o, ...P(o) };
       case "gate": return { ...o, a: P(o.a), b: P(o.b) };
+      case "ladder": return { ...o, a: P(o.a), b: P(o.b), width: (o.width ?? LADDER_W) * f.k };
+      case "step": return { ...o, ...P(o) };
       default: return o;
     }
   };
@@ -527,6 +539,7 @@ export class Stage {
     };
     for (const o of cur.overlays) {
       if (o.type === "cone") cone(o);
+      if (o.type === "ladder") this.buildLadder(o);
       if (o.type !== "gate") continue;
       svg("line", { x1: o.a.x, y1: o.a.y, x2: o.b.x, y2: o.b.y, class: "gate-line" }, this.propLayer);
       cone(o.a);
@@ -538,16 +551,45 @@ export class Stage {
     }
   }
 
-  /** 強調している選手の、これまでの動きを薄い線で残す。練習メニューでは、ボールにさわった所も点で残す(タッチの回数が分かる) */
+  /** ラダー: a(入り口)→ b(出口)の向きに、rungs マスのはしご */
+  private buildLadder(o: LadderOverlay) {
+    const d = unit({ x: o.b.x - o.a.x, y: o.b.y - o.a.y });
+    const n = { x: -d.y, y: d.x };
+    const hw = (o.width ?? LADDER_W) / 2;
+    const at = (t: number, s: number) => ({ x: o.a.x + (o.b.x - o.a.x) * t + n.x * hw * s, y: o.a.y + (o.b.y - o.a.y) * t + n.y * hw * s });
+    const g = svg("g", { class: "ladder" }, this.propLayer);
+    for (const s of [-1, 1]) {
+      const p = at(0, s), q = at(1, s);
+      svg("line", { x1: p.x, y1: p.y, x2: q.x, y2: q.y, class: "ladder-rail" }, g);
+    }
+    for (let k = 0; k <= o.rungs; k++) {
+      const p = at(k / o.rungs, -1), q = at(k / o.rungs, 1);
+      svg("line", { x1: p.x, y1: p.y, x2: q.x, y2: q.y, class: "ladder-rung" }, g);
+    }
+  }
+
+  /**
+   * 強調している選手の、これまでの動きを薄い線で残す。
+   * 練習メニューでは、出てくる人全員の動きと、全ステップの足あと(足を着いた所・ボールにさわった足と、その時のボール)を残す。
+   * ボールの点は、さわっていない時の位置(タッチの回数が分かる)
+   */
   private buildTrails(i: number, focus: Set<PlayerId>) {
     if (this.mini || i === 0) return;
     if (this.drill) {
-      for (const st of this.variant.steps.slice(0, i)) {
-        const b = this.ballRest(st);
+      const steps = this.variant.steps;
+      const touched = new Set(steps.flatMap((st, k) => (st.foot && k > 0 && k <= i ? [k - 1] : [])));
+      for (let k = 0; k < i; k++) {
+        if (touched.has(k)) continue;
+        const b = this.ballRest(steps[k]);
         svg("circle", { cx: b.x, cy: b.y, r: 0.45, class: "ball-dot" }, this.trailLayer);
       }
+      for (let k = 1; k <= i; k++) {
+        const f = steps[k].foot;
+        if (f) this.buildFootprint(f, steps[k - 1], steps[k], k < i);
+      }
+      for (const st of steps.slice(0, i)) for (const o of st.overlays) if (o.type === "step") this.buildStepMark(o, this.trailLayer, true);
     }
-    for (const id of focus) {
+    for (const id of this.drill ? this.players.keys() : focus) {
       const past = this.variant.steps.slice(0, i).map((s) => s.players[id]);
       const pts = [...past, this.variant.steps[i].players[id]];
       let len = 0;
@@ -630,10 +672,15 @@ export class Stage {
           break;
         case "cone":
         case "gate":
+        case "ladder":
           break; // buildProps で描く
+        case "step":
+          break; // buildStepMark で描く
       }
     }
-    if (cur.foot && !this.mini) this.buildFootprint(cur.foot, prev, cur);
+    if (cur.foot && !this.mini && !this.drill) this.buildFootprint(cur.foot, prev, cur, false); // 練習メニューは buildTrails で全ステップ分を描く
+    // 足を着いた所は、選手の丸に隠れないよう手前に描く(前のステップの分は buildTrails で足あととして残す)
+    if (!this.mini) for (const o of cur.overlays) if (o.type === "step") this.buildStepMark(o, this.labelLayer, false);
     // オフサイドのパス: 受けた瞬間に笛の吹き出しを出す
     const receiver = cur.ball.offside ? cur.ball.owner : null;
     if (receiver && i > 0 && !this.mini) {
@@ -691,30 +738,67 @@ export class Stage {
 
   /**
    * 軸足の足あと: ボールにさわった時(前ステップの終わり)の選手の横に、送る方向(+ plant の角度)へ向けて置く。
-   * 右足でける時は、送る方向の左側にじく足(左足)がある
+   * 右足でける時は、送る方向の左側にじく足(左足)がある。
+   * 練習メニューでは、さわった足(当てる面を色でぬる)と、さわった時のボールも置く。past は前のステップの分(うすく描く)
    */
-  private buildFootprint(foot: Foot, prev: Step, cur: Step) {
+  private buildFootprint(foot: Foot, prev: Step, cur: Step, past: boolean) {
     const at = prev.players[foot.player];
     if (!at) return;
+    const ball = this.ballRest(prev);
     let dir = { x: 0, y: 0 };
     if (foot.toward) {
       const to = typeof foot.toward === "string" ? cur.players[foot.toward] : foot.toward;
-      if (to) dir = unit({ x: to.x - at.x, y: to.y - at.y });
+      if (to) dir = unit({ x: to.x - ball.x, y: to.y - ball.y });
     }
-    for (const [a, b] of [[this.ballRest(prev), this.ballRest(cur)], [at, cur.players[foot.player]]]) {
+    for (const [a, b] of [[ball, this.ballRest(cur)], [at, cur.players[foot.player]]]) {
       if (dir.x || dir.y) break;
       if (dist(a, b) > 0.5) dir = unit({ x: b.x - a.x, y: b.y - a.y });
     }
     if (!dir.x && !dir.y) dir = { x: 0, y: -1 };
     const m = foot.kick === "left" ? -1 : 1;
+    const bad = foot.judgement === "bad" ? " bad" : "";
+    const layer = this.drill ? this.trailLayer : this.overlayLayer;
+    const g = svg("g", { class: `touch${past ? " past" : ""}` }, layer);
+    const angle = (v: Point, turn: number) => (Math.atan2(v.y, v.x) * 180) / Math.PI + 90 + turn;
     const side = { x: dir.y * m, y: -dir.x * m }; // 送る方向の左(左足でける時は右)
     const gap = PLAYER_R + 1.1;
-    const deg = (Math.atan2(dir.y, dir.x) * 180) / Math.PI + 90 + (foot.plant ?? 0);
     svg("path", {
       d: FOOT_PATH,
-      class: `ov-foot${foot.judgement === "bad" ? " bad" : ""}`,
-      transform: `translate(${at.x + side.x * gap} ${at.y + side.y * gap}) rotate(${deg.toFixed(1)}) scale(${-0.11 * m} 0.11)`,
-    }, this.overlayLayer);
+      class: `ov-foot${bad}`,
+      transform: `translate(${at.x + side.x * gap} ${at.y + side.y * gap}) rotate(${angle(dir, foot.plant ?? 0).toFixed(1)}) scale(${-FOOT_K * m} ${FOOT_K})`,
+    }, g);
+    if (!this.drill) return;
+    const pose = TOUCH_POSE[foot.surface];
+    const kick = svg("g", {
+      class: `touch-foot${bad}`,
+      transform: `translate(${ball.x - dir.x * pose.back} ${ball.y - dir.y * pose.back}) rotate(${angle(dir, pose.turn * m).toFixed(1)}) scale(${FOOT_K * m} ${FOOT_K})`,
+    });
+    svg("path", { d: FOOT_PATH, class: "touch-foot-body" }, kick);
+    svg("path", { d: SURFACE_FIG[foot.surface].mark, class: "touch-foot-mark", "clip-path": `url(#${this.footClip()})` }, kick);
+    svg("circle", { cx: ball.x, cy: ball.y, r: BALL_R, class: `touch-ball${bad}` }, g);
+    if (foot.surface === "sole") g.append(kick); // 足のうらはボールの上にのせる
+    else g.insertBefore(kick, g.lastChild);
+  }
+
+  /** 足あとの当てる面をぬる時の、足の形の切り抜き(1 つ作って使い回す) */
+  private footClipId: string | null = null;
+  private footClip() {
+    if (this.footClipId) return this.footClipId;
+    this.footClipId = `${this.uid}-foot`;
+    const defs = this.svgEl.querySelector("defs") ?? svg("defs", {}, this.svgEl);
+    const clip = svg("clipPath", { id: this.footClipId }, defs);
+    svg("path", { d: FOOT_PATH }, clip);
+    return this.footClipId;
+  }
+
+  /** 足を着いた所(ラダーなど)。turn はつま先の向き(0 = 画面の上) */
+  private buildStepMark(o: StepOverlay, layer: SVGGElement, past: boolean) {
+    const m = o.foot === "left" ? -1 : 1;
+    svg("path", {
+      d: FOOT_PATH,
+      class: `step-foot ${o.foot}${o.judgement === "bad" ? " bad" : ""}${past ? " past" : ""}`,
+      transform: `translate(${o.x} ${o.y}) rotate(${o.turn ?? 0}) scale(${FOOT_K * m} ${FOOT_K})`,
+    }, layer);
   }
 
   /** シュートコース: ボール(または選手)と両ゴールポストを結ぶ三角形。centerLine はその真ん中の線(キーパーの立つ目安) */

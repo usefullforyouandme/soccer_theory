@@ -58,7 +58,7 @@ function checkLogic(s, file) {
 
   // 練習メニュー(kind: drill)は、出てくる人だけ・広さ(area)の中で描く
   const drill = s.kind === "drill";
-  const DRILL_CATS = ["dribble", "pass"];
+  const DRILL_CATS = ["dribble", "pass", "agility"];
   if (drill) {
     if (!s.area) err("area", "練習メニュー(kind: drill)には area(広さ)が必要です");
     if (!s.practice) err("practice", "練習メニュー(kind: drill)には practice(準備・やり方・回数)が必要です");
@@ -250,12 +250,17 @@ function checkLogic(s, file) {
         if (o.type === "look" && isPlayer(o.player)) {
           const target = o.at === "ball" ? st.ball : typeof o.at === "string" ? st.players[o.at] : o.at;
           if (o.at === o.player) err(oat, "自分自身を見る先にはできません");
-          else if (target && dist(target, st.players[o.player]) < 2) warn(oat, `見る先が ${o.player} に近すぎて、向きが分かりません`);
+          else if (target && dist(target, st.players[o.player]) < 2 / scale) warn(oat, `見る先が ${o.player} に近すぎて、向きが分かりません`);
         }
         if (o.type === "arrow" && prev && isPlayer(o.by)) checkArrow(o, prev, st, oat);
         if (drill && ["offsideLine", "shotCone"].includes(o.type)) err(oat, `練習メニューでは ${o.type} は使えません(ゴール・ラインを描かないため)`);
-        if (!drill && ["cone", "gate"].includes(o.type)) warn(oat, `${o.type} は練習メニュー用のオーバーレイです`);
-        if (o.type === "cone") inArea(oat, o);
+        if (!drill && ["cone", "gate", "ladder", "step"].includes(o.type)) warn(oat, `${o.type} は練習メニュー用のオーバーレイです`);
+        if (o.type === "cone" || o.type === "step") inArea(oat, o);
+        if (o.type === "ladder") {
+          inArea(oat, o.a);
+          inArea(oat, o.b);
+          if (dist(o.a, o.b) < 0.5) err(oat, "ラダーの入り口と出口が近すぎます");
+        }
         if (o.type === "gate") {
           inArea(oat, o.a);
           inArea(oat, o.b);

@@ -26,6 +26,7 @@ const CATEGORIES: { key: Category; label: string; icon: string }[] = [
 const DRILL_CATEGORIES: { key: Category; label: string; icon: string }[] = [
   { key: "dribble", label: "コーンドリブル", icon: "🔺" },
   { key: "pass", label: "2人のパス", icon: "👟" },
+  { key: "agility", label: "ラダー(すばやい足の動き)", icon: "👣" },
 ];
 /** ずかん全体の合言葉 */
 const KEYWORDS: Record<Keyword, { label: string; icon: string }> = {

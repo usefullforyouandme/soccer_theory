@@ -20,7 +20,7 @@ npm run validate           # できた JSON の検証(オフサイド・速さ�
 ## ファイル
 | ファイル | 内容 |
 |---|---|
-| `lib.mjs` | 座標表 → JSON の変換と、オーバーレイ・ボールの書き方の補助(`formation: "2-3-2"` で味方を 2-3-2 にできる)。練習メニューは `buildDrill()` と `cone` / `gate` / `foot` |
+| `lib.mjs` | 座標表 → JSON の変換と、オーバーレイ・ボールの書き方の補助(`formation: "2-3-2"` で味方を 2-3-2 にできる)。練習メニューは `buildDrill()` と `cone` / `gate` / `ladder` / `steps` / `foot` |
 | `groups.mjs` | テーマ単位の値(疑問形タイトル・合言葉・おすすめの順番・ルールの注記・練習メニュー)。同じテーマのパターンで値がずれないよう、ここだけで管理する |
 | `00-box-entry-left.mjs` | 最初のシナリオ(サイドからゴール前へ:左サイドから) |
 | `w1-*.mjs` | 第 1 弾(取られたらすぐ取り返す / 1人が行く、1人がカバー / パスコースに顔を出そう / 相手の後ろへ走るタイミング) |
@@ -33,7 +33,7 @@ npm run validate           # できた JSON の検証(オフサイド・速さ�
 | `w7-formation-232.mjs` | 2-3-2 版(B1・C1・D1・E1)。3-3-1 のシナリオの文章・ボールを使い、4番を外して10番を加え、置きかえる選手の座標だけを書く |
 | `w8-*.mjs` | ポジション別の場面(BL-23)。`gk`(飛び出し・1対1)/ `cb`(前で取る・外へ大きく)/ `sb`(ななめの構え)/ `cm`(間で受ける・はね返りを拾う)/ `wm`(広がって待つ・ゴール前を見て決める・ついてもどる)/ `fw`(道をふさいで近づく) |
 | `w9-*.mjs` | 第 9 弾(BL-26)。`throw-in-defense`(相手のスローインの守り。E2 を 180° 回して作成)/ `free-kick`(相手のフリーキックの守り・味方のフリーキック。E8 は E9 を 180° 回して作成)/ `open-body`(体をひらいて受けよう)/ `pass-and-move`(パスしたら動こう)/ `double-team`(2人ではさもう) |
-| `p-*.mjs` | 練習メニュー(`kind: drill`。`buildDrill()` で作る。座標は `area` の中、出てくる人だけを表に書き、コーン・門は `props`、足の使い方は各ステップの `foot`)。`dribble-zigzag`(D1 ジグザグドリブル) |
+| `p-*.mjs` | 練習メニュー(`kind: drill`。`buildDrill()` で作る。座標は `area` の中、出てくる人だけを表に書き、コーン・門は `props`、足の使い方は各ステップの `foot`)。`dribble-zigzag`(D1 ジグザグドリブル)/ `dribble-headup`(D2)/ `dribble-turn`(D3)/ `dribble-speed`(D4)/ `ladder-two-step`・`ladder-side-step`・`ladder-jump`(L1〜L3 ラダー。`ladder` と、足を着いた所 `steps("L x,y R x,y")`) |
 | `build-all.mjs` | 上の順番で全部を実行する(`--check` で一致確認) |
 
 LLM で作ったシナリオ(`docs/scenario-prompt.md` の流れ)は、このフォルダにスクリプトがなくても構いません。`scenarios:check` はスクリプトがあるシナリオだけを比べます。
