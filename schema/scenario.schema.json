@@ -23,6 +23,13 @@
     "schemaVersion": {
       "const": 2
     },
+    "kind": {
+      "description": "シナリオの種類。match=試合の場面(省略時)、drill=練習メニューの説明(コーンドリブル・2人のパスなど。練習ページに並ぶ)。drill では area・practice が必要で、選手は出てくる人だけでよい",
+      "enum": [
+        "match",
+        "drill"
+      ]
+    },
     "id": {
       "description": "ファイル名と一致させる(kebab-case)",
       "type": "string",
@@ -41,13 +48,15 @@
       "maxLength": 20
     },
     "category": {
-      "description": "種類。build=ボールを前へ運ぶ、attack=ゴールをねらう、defend=ボールを取る・守る、transition=切りかえ、restart=リスタート・キーパー",
+      "description": "種類。試合の場面は build=ボールを前へ運ぶ、attack=ゴールをねらう、defend=ボールを取る・守る、transition=切りかえ、restart=リスタート・キーパー。練習メニュー(kind: drill)は dribble=ドリブル、pass=パス",
       "enum": [
         "build",
         "attack",
         "defend",
         "transition",
-        "restart"
+        "restart",
+        "dribble",
+        "pass"
       ]
     },
     "group": {
@@ -186,6 +195,11 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "description": "この練習を動きで見せる練習メニュー(kind: drill)のシナリオ id(任意)。指導者向け欄に「動きで見る」ボタンを出す"
           }
         }
       }
@@ -279,6 +293,84 @@
           "$ref": "#/$defs/variant"
         }
       }
+    },
+    "area": {
+      "description": "練習メニュー(kind: drill)で使う広さ(m)。座標は X=0〜w、Y=0〜h(Y=0 が画面の上)で書き、この範囲を拡大して描く",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "w",
+        "h"
+      ],
+      "properties": {
+        "w": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 50
+        },
+        "h": {
+          "type": "number",
+          "minimum": 2,
+          "maximum": 68
+        }
+      }
+    },
+    "practice": {
+      "description": "練習メニュー(kind: drill)の指導者向けカード(漢字可・大人向け)。練習ページでは最初から開いて表示する。声かけは coachCue に書く",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "setup",
+        "howTo",
+        "reps"
+      ],
+      "properties": {
+        "setup": {
+          "description": "準備(人数・広さ・コーンの数など)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "howTo": {
+          "description": "やり方(1〜3文)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "reps": {
+          "description": "回数・時間の目安",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "levelUp": {
+          "description": "レベルアップ(できたら次に変えること)",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "safety": {
+          "description": "安全のための注意",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        }
+      }
+    },
+    "match": {
+      "description": "練習メニュー(kind: drill)から、この技術を使う試合の場面へのリンク。結末の後に「▶ 試合ではこの場面」ボタンで出す",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+          "description": "試合の場面(kind: match)のシナリオ id"
+        }
+      }
     }
   },
   "$defs": {
@@ -332,7 +424,7 @@
         },
         "players": {
           "type": "array",
-          "minItems": 8,
+          "minItems": 0,
           "maxItems": 8,
           "items": {
             "type": "object",
@@ -364,7 +456,8 @@
                 ]
               }
             }
-          }
+          },
+          "description": "試合の場面(kind: match)は 8 人ちょうど。練習メニュー(kind: drill)は出てくる人だけ(0〜8 人)"
         }
       }
     },
@@ -537,8 +630,70 @@
               },
               {
                 "$ref": "#/$defs/shotCone"
+              },
+              {
+                "$ref": "#/$defs/cone"
+              },
+              {
+                "$ref": "#/$defs/gate"
               }
             ]
+          }
+        },
+        "foot": {
+          "description": "足の使い方(練習メニュー用・任意)。説明欄に「あしもと」のアップ図を出し、ピッチにはその選手の軸足の足あとを置く。このステップの始めにボールにさわったとして描く",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "player",
+            "kick",
+            "surface"
+          ],
+          "properties": {
+            "player": {
+              "$ref": "#/$defs/playerId"
+            },
+            "kick": {
+              "description": "ボールにさわる足",
+              "enum": [
+                "right",
+                "left"
+              ]
+            },
+            "surface": {
+              "description": "ボールに当てる所。inside=足の内がわ、outside=足の外がわ、sole=足のうら、instep=くつひもの所、toe=つま先",
+              "enum": [
+                "inside",
+                "outside",
+                "sole",
+                "instep",
+                "toe"
+              ]
+            },
+            "plant": {
+              "description": "軸足のつま先の向き(度)。0 = ボールを送る方向。プラスは右回り",
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "toward": {
+              "description": "ボールを送る先(選手ID・座標)。省略時はこのステップのボールの動き(動かない時は選手の動き)の向き",
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/playerId"
+                },
+                {
+                  "$ref": "#/$defs/point"
+                }
+              ]
+            },
+            "judgement": {
+              "description": "bad = よくあるミスの使い方(赤くぬる)。省略時は good",
+              "enum": [
+                "good",
+                "bad"
+              ]
+            }
           }
         }
       }
@@ -798,6 +953,52 @@
         "label": {
           "type": "string",
           "maxLength": 12
+        }
+      }
+    },
+    "cone": {
+      "description": "コーン(練習メニュー用)。ステップの間ずっと同じ場所に置く道具なので、使う全ステップに同じものを書く",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "type": {
+          "const": "cone"
+        },
+        "x": {
+          "$ref": "#/$defs/x"
+        },
+        "y": {
+          "$ref": "#/$defs/y"
+        }
+      }
+    },
+    "gate": {
+      "description": "コーン 2 本の門(練習メニュー用)。a・b はコーンの位置",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "a",
+        "b"
+      ],
+      "properties": {
+        "type": {
+          "const": "gate"
+        },
+        "a": {
+          "$ref": "#/$defs/point"
+        },
+        "b": {
+          "$ref": "#/$defs/point"
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 6
         }
       }
     }

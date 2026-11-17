@@ -56,12 +56,32 @@ function checkLogic(s, file) {
 
   if (basename(file, ".json") !== s.id) err("id", `ファイル名と id(${s.id}) が一致しません`);
 
+  // 練習メニュー(kind: drill)は、出てくる人だけ・広さ(area)の中で描く
+  const drill = s.kind === "drill";
+  const DRILL_CATS = ["dribble", "pass"];
+  if (drill) {
+    if (!s.area) err("area", "練習メニュー(kind: drill)には area(広さ)が必要です");
+    if (!s.practice) err("practice", "練習メニュー(kind: drill)には practice(準備・やり方・回数)が必要です");
+    if (!DRILL_CATS.includes(s.category)) err("category", `練習メニューの category は ${DRILL_CATS.join(" / ")} にしてください`);
+    for (const k of ["keyword", "courseOrder", "counterpart", "drills"]) if (s[k] !== undefined) warn(k, "練習メニューでは使いません(ずかんの項目です)");
+  } else {
+    if (DRILL_CATS.includes(s.category)) err("category", `${s.category} は練習メニュー(kind: drill)だけの種類です`);
+    for (const k of ["area", "practice", "match"]) if (s[k] !== undefined) err(k, "練習メニュー(kind: drill)だけの項目です");
+  }
+  // 描画の拡大率(src/stage.ts の fitArea と同じ)。選手の丸の大きさは画面上で同じなので、重なりの基準は拡大率で割る
+  const scale = drill && s.area ? Math.min(50 / s.area.w, 68 / s.area.h) : 1;
+  const overlapDist = PLAYER_OVERLAP_DIST / scale;
+  const inArea = (where, p) => {
+    if (drill && s.area && (p.x > s.area.w || p.y > s.area.h)) err(where, `(${p.x}, ${p.y}) が広さ ${s.area.w}×${s.area.h}m の外です`);
+  };
+
   // ロスター
   const roster = new Map();
   for (const side of ["home", "away"]) {
     const prefix = side === "home" ? "h" : "a";
     const roles = s.teams[side].players.map((p) => p.role);
-    if (roles.filter((r) => r === "GK").length !== 1) err(`teams.${side}`, "GK はちょうど1人にしてください");
+    if (!drill && roles.length !== 8) err(`teams.${side}`, "試合の場面は 8 人にしてください");
+    if (!drill && roles.filter((r) => r === "GK").length !== 1) err(`teams.${side}`, "GK はちょうど1人にしてください");
     for (const p of s.teams[side].players) {
       if (p.id !== `${prefix}${p.number}`) err(`teams.${side}`, `${p.id} は ${prefix}${p.number} にしてください`);
       if (roster.has(p.id)) err(`teams.${side}`, `${p.id} が重複しています`);
@@ -92,8 +112,8 @@ function checkLogic(s, file) {
   if (s.questionTitle) checkText("questionTitle", s.questionTitle);
   else warn("questionTitle", "子ども向けの疑問形タイトルがありません(一覧と問いかけ中に答えが見えてしまいます)");
   if (s.questionTitle && s.questionTitle === s.title) warn("questionTitle", "title と同じです(答えが見えてしまいます)");
-  if (!s.keyword) warn("keyword", "合言葉がありません");
-  if (!s.courseOrder) warn("courseOrder", "おすすめの順番がありません");
+  if (!s.keyword && !drill) warn("keyword", "合言葉がありません");
+  if (!s.courseOrder && !drill) warn("courseOrder", "おすすめの順番がありません");
   if (s.ruleNote) checkText("ruleNote", s.ruleNote);
   if (s.next) checkText("next.label", s.next.label);
   if (s.choices) {
@@ -112,6 +132,7 @@ function checkLogic(s, file) {
     checkText(`${vName}.outcomeBanner`, v.outcomeBanner);
     if (vName === "good" && v.outcomeTone && v.outcomeTone !== "chance") warn(`${vName}.outcomeTone`, "お手本の結末は chance にしてください");
     if (vName === "bad" && v.outcomeTone === "chance") warn(`${vName}.outcomeTone`, "よくあるミスの結末は pinch か miss にしてください");
+    if (drill && vName === "bad" && v.outcomeTone !== "miss") warn(`${vName}.outcomeTone`, "練習メニューのよくあるミスの結末は miss(△ 残念…)にしてください");
     if (v.steps.slice(1).some((st) => st.ball.offside) && vName === "good") warn(`${vName}`, "お手本にオフサイドのパスがあります");
 
     v.steps.forEach((st, i) => {
@@ -130,8 +151,18 @@ function checkLogic(s, file) {
       for (let a = 0; a < ids.length; a++) {
         for (let b = a + 1; b < ids.length; b++) {
           const d = dist(st.players[ids[a]], st.players[ids[b]]);
-          if (d < PLAYER_OVERLAP_DIST) warn(at, `${ids[a]} と ${ids[b]} が近すぎて重なって見えます(${d.toFixed(1)}m)`);
+          if (d < overlapDist) warn(at, `${ids[a]} と ${ids[b]} が近すぎて重なって見えます(${d.toFixed(1)}m)`);
         }
+      }
+
+      for (const id of ids) inArea(`${at}.players.${id}`, st.players[id]);
+      inArea(`${at}.ball`, st.ball);
+      if (st.foot) {
+        const f = st.foot;
+        if (!isPlayer(f.player)) err(`${at}.foot`, `存在しない選手 ${f.player} があります`);
+        if (typeof f.toward === "string" && !isPlayer(f.toward)) err(`${at}.foot`, `存在しない選手 ${f.toward} を参照しています`);
+        if (typeof f.toward === "object") inArea(`${at}.foot.toward`, f.toward);
+        if (f.toward === f.player) err(`${at}.foot`, "自分自身を送る先にはできません");
       }
 
       // ボール
@@ -160,7 +191,8 @@ function checkLogic(s, file) {
           const speed = d / sec;
           if (speed > PLAYER_SPEED_ERROR) err(at, `${id} の移動が速すぎます(${speed.toFixed(1)}m/s)`);
           else if (speed > PLAYER_SPEED_WARN) warn(at, `${id} の移動がやや速いです(${speed.toFixed(1)}m/s)`);
-          if (d === 0) warn(at, `${id} が前ステップから全く動いていません(微調整の移動を入れてください)`);
+          // 練習メニューでは、コーチや順番待ちの人がその場にいるのは自然なので見ない
+          if (d === 0 && !drill) warn(at, `${id} が前ステップから全く動いていません(微調整の移動を入れてください)`);
         }
         const ballSpeed = dist(prev.ball, ball) / sec;
         if (ballSpeed > BALL_SPEED_ERROR) err(`${at}.ball`, `ボールが速すぎます(${ballSpeed.toFixed(1)}m/s)`);
@@ -182,7 +214,7 @@ function checkLogic(s, file) {
         if (ball.motion === "steal" && prev.ball.owner && ball.owner && sideOf(prev.ball.owner) === sideOf(ball.owner)) {
           err(`${at}.ball`, "steal は相手チームからボールを奪う場合だけ使ってください");
         }
-        if (["ground", "air"].includes(ball.motion) && ball.owner && prev.ball.owner) {
+        if (["ground", "air"].includes(ball.motion) && ball.owner && prev.ball.owner && !drill) {
           if (sideOf(prev.ball.owner) !== sideOf(ball.owner)) {
             err(`${at}.ball`, "相手へのパスは steal を使ってください");
           } else {
@@ -221,6 +253,17 @@ function checkLogic(s, file) {
           else if (target && dist(target, st.players[o.player]) < 2) warn(oat, `見る先が ${o.player} に近すぎて、向きが分かりません`);
         }
         if (o.type === "arrow" && prev && isPlayer(o.by)) checkArrow(o, prev, st, oat);
+        if (drill && ["offsideLine", "shotCone"].includes(o.type)) err(oat, `練習メニューでは ${o.type} は使えません(ゴール・ラインを描かないため)`);
+        if (!drill && ["cone", "gate"].includes(o.type)) warn(oat, `${o.type} は練習メニュー用のオーバーレイです`);
+        if (o.type === "cone") inArea(oat, o);
+        if (o.type === "gate") {
+          inArea(oat, o.a);
+          inArea(oat, o.b);
+          if (o.label) checkText(`${oat}.label`, o.label);
+        }
+        if (o.type === "arrow") for (const p of [o.from, o.to]) if (p) inArea(oat, p);
+        if (o.type === "space") inArea(oat, o);
+        if (o.type === "look" && typeof o.at === "object") inArea(oat, o.at);
       });
     });
   }
@@ -282,10 +325,8 @@ function checkLogic(s, file) {
   return { errors, warnings };
 }
 
-/** 「反対側から見る」のリンクが、存在するシナリオを指し、おたがいに指し合っているか */
-function checkCounterparts(list) {
-  const problems = [];
-  // 1本だけ検証する時も相手を確かめられるよう、同じフォルダのシナリオも読む
+/** 1本だけ検証する時もリンク先を確かめられるよう、同じフォルダのシナリオも読む */
+function loadSiblings(list) {
   const byId = new Map();
   for (const dir of new Set(list.map(({ file }) => dirname(file)))) {
     for (const f of readdirSync(dir).filter((f) => f.endsWith(".json"))) {
@@ -298,6 +339,13 @@ function checkCounterparts(list) {
     }
   }
   for (const item of list) byId.set(item.data.id, item);
+  return byId;
+}
+
+/** 「反対側から見る」のリンクが、存在するシナリオを指し、おたがいに指し合っているか */
+function checkCounterparts(list) {
+  const problems = [];
+  const byId = loadSiblings(list);
   for (const { file, data } of list) {
     const c = data.counterpart;
     if (!c) continue;
@@ -350,6 +398,20 @@ function checkNext(list) {
   return list.filter(({ data }) => data.next && !ids.has(data.next.id)).map(({ file, data }) => `${basename(file)}: next のシナリオ ${data.next.id} がありません`);
 }
 
+/** 練習 → 試合(match)、試合 → 練習(drills[].id)のリンク先が、あって種類が合っているか */
+function checkPracticeLinks(list) {
+  const problems = [];
+  const byId = loadSiblings(list);
+  const kindOf = (id) => byId.get(id)?.data.kind ?? (byId.has(id) ? "match" : null);
+  for (const { file, data } of list) {
+    if (data.match && kindOf(data.match.id) !== "match") problems.push(`${basename(file)}: match のシナリオ ${data.match.id} が試合の場面にありません`);
+    for (const d of data.drills ?? []) {
+      if (d.id && kindOf(d.id) !== "drill") problems.push(`${basename(file)}: drills の ${d.id} が練習メニュー(kind: drill)にありません`);
+    }
+  }
+  return problems;
+}
+
 /** よくあるミスの形の偏り(「動かない」型の数)を表示する */
 function reportMistakeKinds(list) {
   const still = list.filter(({ data }) => {
@@ -392,8 +454,9 @@ for (const file of files) {
   if (errors.length) failed = true;
   else valid.push({ file, data });
 }
-if (valid.length > 1) reportMistakeKinds(valid);
-for (const p of [...checkGroups(valid), ...checkCounterparts(valid), ...checkNext(valid)]) {
+const validMatches = valid.filter(({ data }) => data.kind !== "drill");
+if (validMatches.length > 1) reportMistakeKinds(validMatches);
+for (const p of [...checkGroups(valid), ...checkCounterparts(valid), ...checkNext(valid), ...checkPracticeLinks(valid)]) {
   console.error(`  ERROR ${p}`);
   failed = true;
 }

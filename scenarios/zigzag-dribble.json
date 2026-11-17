@@ -1,0 +1,544 @@
+{
+  "schemaVersion": 2,
+  "kind": "drill",
+  "id": "zigzag-dribble",
+  "title": "ジグザグドリブル",
+  "questionTitle": "コーンの間、どうやって通る?",
+  "category": "dribble",
+  "group": "zigzag-dribble",
+  "pattern": "コーン4本",
+  "theme": "コーンの間を、細かいタッチでボールを体の近くに置いたまま、ジグザグにぬけていく(1対1でボールを失わないための足もとの技術)",
+  "coachNote": "U-10 向けのコーンドリブル。右足のインサイド(内側)とアウトサイド(外側)を交互に使い、1歩に1回さわるくらいの細かいタッチでボールを体の近くに置く。× は、つま先で大きく押し出してボールが体から離れ、コーンに当たってコースから外れる例(ミスはタッチの大きさの1点)。左足でも同じ。試合では、1対1で相手の前でボールを失わないための土台になる(▶ 試合ではこの場面)。",
+  "coachCue": "小さくさわって、ボールを足のそばに!",
+  "targetGrade": "middle",
+  "question": "コーンが4本ならんでいる。{h7}は、どんなタッチでコーンの間を通る?",
+  "keyPoint": "小さくさわって、ボールをいつも足のそばに!",
+  "choices": [
+    {
+      "text": "大きくけって、一気に走る",
+      "correct": false,
+      "feedback": "大きくけると、ボールが足からはなれて、コーンに当たりやすいよ。"
+    },
+    {
+      "text": "小さくさわって、ボールを近くに置く",
+      "correct": true,
+      "feedback": "そう!小さくさわると、すぐに向きを変えられるよ。"
+    },
+    {
+      "text": "コーンの外を大回りする",
+      "correct": false,
+      "feedback": "大回りすると時間がかかるよ。コーンの間を細かく通ろう。"
+    }
+  ],
+  "area": {
+    "w": 6,
+    "h": 14
+  },
+  "practice": {
+    "setup": "1人1球。コーン4本を2.5m おきに一直線(よこ6m × たて14m)。列を2〜3つ作り、待つ人を減らす",
+    "howTo": "スタートからコーンの左右を交互に通り、最後のコーンをぬけたらゴール。右足の内側と外側で、1歩に1回さわるくらい細かく運ぶ。左足でも同じようにやる。",
+    "reps": "片道で1本。3〜5本 × 2セット(1本ごとに次の人と交代)",
+    "levelUp": "左足だけ → 両足を交互に → コーンの間をせまく(1.5m)→ タイムを計る",
+    "safety": "前の人がコーンを2本ぬけてからスタートする。列と列の間は3m以上あける"
+  },
+  "match": {
+    "id": "take-on-wing"
+  },
+  "teams": {
+    "home": {
+      "name": "練習する人",
+      "formation": "0-0",
+      "players": [
+        {
+          "id": "h7",
+          "number": 7,
+          "role": "CM"
+        }
+      ]
+    },
+    "away": {
+      "name": "コーチ",
+      "formation": "0-0",
+      "players": []
+    }
+  },
+  "variants": {
+    "good": {
+      "label": "お手本",
+      "outcomeBanner": "コーンを全部通れた!",
+      "outcomeTone": "chance",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がボールを持って、コーンの前に立った。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 3, "y": 13.4 }
+          },
+          "ball": {
+            "x": 3,
+            "y": 12.8,
+            "owner": "h7",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "インサイドで",
+          "explanation": "右足の内がわで、ちょんと左へ。ボールは足のそば。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 1.7, "y": 11 }
+          },
+          "ball": {
+            "x": 2.13,
+            "y": 10.58,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "小さく",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "inside"
+          }
+        },
+        {
+          "phase": "firstPlay",
+          "title": "アウトサイドで",
+          "explanation": "こんどは右足の外がわで右へ。小さくさわると、すぐ曲がれる。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 4.3, "y": 8.5 }
+          },
+          "ball": {
+            "x": 3.87,
+            "y": 8.08,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "outside"
+          }
+        },
+        {
+          "phase": "nextPlay",
+          "title": "もう一度 左へ",
+          "explanation": "また内がわで左へ。コーンに当てずに進む。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 1.7, "y": 6 }
+          },
+          "ball": {
+            "x": 2.13,
+            "y": 5.58,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "inside"
+          }
+        },
+        {
+          "phase": "outcome",
+          "title": "通りぬけた!",
+          "explanation": "外がわで右へ。最後のコーンも通りぬけた!",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 4.3, "y": 3.5 }
+          },
+          "ball": {
+            "x": 4.3,
+            "y": 2.9,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "できた!",
+              "tone": "good"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "outside"
+          }
+        }
+      ]
+    },
+    "bad": {
+      "label": "よくあるミス",
+      "outcomeBanner": "コーンに当たった…",
+      "outcomeTone": "miss",
+      "steps": [
+        {
+          "phase": "initial",
+          "title": "はじまり",
+          "explanation": "{h7}がボールを持って、コーンの前に立った。",
+          "durationMs": 1500,
+          "focus": ["h7"],
+          "players": {
+            "h7": { "x": 3, "y": 13.4 }
+          },
+          "ball": {
+            "x": 3,
+            "y": 12.8,
+            "owner": "h7",
+            "motion": "hold"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            }
+          ]
+        },
+        {
+          "phase": "movement",
+          "title": "大きくけった",
+          "explanation": "{h7}は右足のつま先で、大きくけり出した。",
+          "durationMs": 1500,
+          "players": {
+            "h7": { "x": 2.6, "y": 12.2 }
+          },
+          "ball": {
+            "x": 2,
+            "y": 10.4,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7",
+              "judgement": "bad"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "けりすぎ",
+              "tone": "bad"
+            }
+          ],
+          "foot": {
+            "player": "h7",
+            "kick": "right",
+            "surface": "toe",
+            "judgement": "bad"
+          }
+        },
+        {
+          "phase": "firstPlay",
+          "title": "コーンに当たった",
+          "explanation": "ボールが足から遠い。コーンに当たってしまった。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 1.9, "y": 10.4 }
+          },
+          "ball": {
+            "x": 2.6,
+            "y": 8.8,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            },
+            {
+              "type": "callout",
+              "player": "h7",
+              "text": "遠い!",
+              "tone": "bad"
+            }
+          ]
+        },
+        {
+          "phase": "nextPlay",
+          "title": "取りにいく",
+          "explanation": "{h7}はボールを追いかけて、コーンの外へ出た。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 4.2, "y": 9.4 }
+          },
+          "ball": {
+            "x": 5.4,
+            "y": 8,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            }
+          ]
+        },
+        {
+          "phase": "outcome",
+          "title": "時間がかかった",
+          "explanation": "コースにもどるのに時間がかかった。小さくさわろう。",
+          "durationMs": 1600,
+          "players": {
+            "h7": { "x": 5.2, "y": 7.6 }
+          },
+          "ball": {
+            "x": 5,
+            "y": 6.9,
+            "owner": "h7",
+            "motion": "dribble"
+          },
+          "overlays": [
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 11
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 8.5
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 6
+            },
+            {
+              "type": "cone",
+              "x": 3,
+              "y": 3.5
+            },
+            {
+              "type": "arrow",
+              "kind": "dribble",
+              "by": "h7"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

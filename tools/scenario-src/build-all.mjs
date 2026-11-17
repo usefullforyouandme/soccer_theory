@@ -45,6 +45,7 @@ const ORDER = [
   "w9-open-body.mjs",
   "w9-pass-and-move.mjs",
   "w9-double-team.mjs",
+  "p-dribble-zigzag.mjs",
 ];
 
 const check = process.argv.includes("--check");

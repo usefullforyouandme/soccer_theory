@@ -9,6 +9,10 @@ const modules = import.meta.glob<Scenario>("../scenarios/*.json", { eager: true,
 // 同じテーマの中では、3-3-1 のパターンを先に、別のフォーメーション(2-3-2 など)の版を後ろに並べる
 const otherFormation = (s: Scenario) => Number(s.teams.home.formation !== "3-3-1");
 const scenarios = Object.values(modules).sort((a, b) => otherFormation(a) - otherFormation(b) || a.id.localeCompare(b.id));
+const isDrill = (s: Scenario) => s.kind === "drill";
+/** ずかん(試合の場面)と練習ページ(練習メニュー)に分ける */
+const matches = scenarios.filter((s) => !isDrill(s));
+const practices = scenarios.filter(isDrill);
 
 /** 種類の表示順と見出し */
 const CATEGORIES: { key: Category; label: string; icon: string }[] = [
@@ -17,6 +21,11 @@ const CATEGORIES: { key: Category; label: string; icon: string }[] = [
   { key: "defend", label: "ボールを取る・守る", icon: "🛡️" },
   { key: "transition", label: "切りかえ", icon: "🔄" },
   { key: "restart", label: "リスタート・キーパー", icon: "🧤" },
+];
+/** 練習ページの区分 */
+const DRILL_CATEGORIES: { key: Category; label: string; icon: string }[] = [
+  { key: "dribble", label: "コーンドリブル", icon: "🔺" },
+  { key: "pass", label: "2人のパス", icon: "👟" },
 ];
 /** ずかん全体の合言葉 */
 const KEYWORDS: Record<Keyword, { label: string; icon: string }> = {
@@ -34,6 +43,14 @@ const COURSE_STAGES = [
 ];
 const LIST_VIEW_KEY = "soccer-theory:list-view";
 const POSITION_KEY = "soccer-theory:position";
+const PAGE_KEY = "soccer-theory:page";
+/** 2 つのページ: ずかん(#/)と練習ページ(#/practice) */
+type Page = "zukan" | "practice";
+const PAGES: Record<Page, { hash: string; tab: string; title: string }> = {
+  zukan: { hash: "#/", tab: "⚽ 動き方ずかん", title: "サッカー動き方ずかん" },
+  practice: { hash: "#/practice", tab: "🔺 練習", title: "サッカー練習ページ" },
+};
+const pageOf = (s: Scenario): Page => (isDrill(s) ? "practice" : "zukan");
 type ListView = "course" | "category" | "position";
 const readStored = (key: string) => {
   try {
@@ -53,6 +70,8 @@ const readListView = (): ListView => {
   const v = readStored(LIST_VIEW_KEY);
   return v === "category" || v === "position" ? v : "course";
 };
+/** 最後に開いた方のページ(読めない時はずかん) */
+const readPage = (): Page => (readStored(PAGE_KEY) === "practice" ? "practice" : "zukan");
 const positionOf = (key: string | null | undefined) => POSITIONS.find((p) => p.key === key);
 const readPosition = (): PositionGuide => positionOf(readStored(POSITION_KEY)) ?? POSITIONS[0];
 /** 子どもに見せるテーマ名(答えが書いていない疑問形) */
@@ -113,6 +132,19 @@ const speech = {
 };
 
 // ---------- 一覧 ----------
+/** 見出しのすぐ下に置く、ずかんと練習ページの切りかえ */
+function pageSwitch(cur: Page) {
+  const nav = h("nav", "page-switch");
+  nav.setAttribute("aria-label", "ページの切りかえ");
+  for (const k of ["zukan", "practice"] as const) {
+    const a = h("a", `page-tab${k === cur ? " active" : ""}`, PAGES[k].tab);
+    a.href = PAGES[k].hash;
+    if (k === cur) a.setAttribute("aria-current", "page");
+    nav.append(a);
+  }
+  return nav;
+}
+
 function groupBlock(items: Scenario[], numbered: boolean) {
   const first = items[0];
   const block = h("div", "group-block");
@@ -205,11 +237,12 @@ function positionSection(p: PositionGuide) {
 }
 
 function renderList() {
-  document.title = "サッカー動き方ずかん";
+  document.title = PAGES.zukan.title;
+  saveStored(PAGE_KEY, "zukan");
   const view = readListView();
   const page = h("main", "list-page");
   const header = h("header", "list-header");
-  header.append(h("h1", "app-title", "⚽ サッカー動き方ずかん"), h("p", "lead", "見たい場面を選んでね"));
+  header.append(h("h1", "app-title", "⚽ サッカー動き方ずかん"), pageSwitch("zukan"), h("p", "lead", "見たい場面を選んでね"));
   const switcher = h("div", "list-view-tabs");
   switcher.setAttribute("role", "tablist");
   for (const [v, label] of [["course", "おすすめの順番"], ["category", "種類ごと"], ["position", "ポジションから選ぶ"]] as const) {
@@ -230,7 +263,7 @@ function renderList() {
   const groupsOf = (list: Scenario[]) => [...new Set(list.map((s) => s.group))].map((g) => list.filter((s) => s.group === g));
   if (view === "course") {
     // 合言葉と、U-10 の指導の順番に合わせた「おすすめの順番」
-    const sorted = [...scenarios].sort((a, b) => (a.courseOrder ?? 99) - (b.courseOrder ?? 99) || a.id.localeCompare(b.id));
+    const sorted = [...matches].sort((a, b) => (a.courseOrder ?? 99) - (b.courseOrder ?? 99) || a.id.localeCompare(b.id));
     let from = 0;
     for (const st of COURSE_STAGES) {
       const inStage = sorted.filter((s) => (s.courseOrder ?? 99) > from && (s.courseOrder ?? 99) <= st.upTo);
@@ -246,7 +279,7 @@ function renderList() {
   } else {
     // 種類 → テーマ → パターン の順に並べる
     for (const cat of CATEGORIES) {
-      const inCat = scenarios.filter((s) => s.category === cat.key);
+      const inCat = matches.filter((s) => s.category === cat.key);
       if (!inCat.length) continue;
       const section = h("section", "cat-section");
       section.append(h("h2", "cat-title", `${cat.icon} ${cat.label}`));
@@ -257,11 +290,34 @@ function renderList() {
   app.replaceChildren(page);
 }
 
+/** 練習ページ: 練習の前に、指導者が子どもに動きで見せる。ドリブル/パスの 2 区分 */
+function renderPractice() {
+  document.title = PAGES.practice.title;
+  saveStored(PAGE_KEY, "practice");
+  const page = h("main", "list-page practice-page");
+  const header = h("header", "list-header");
+  header.append(h("h1", "app-title", "🔺 サッカー練習ページ"), pageSwitch("practice"), h("p", "lead", "練習のやり方を、動きで見よう"));
+  page.append(header);
+  const groupsOf = (list: Scenario[]) => [...new Set(list.map((s) => s.group))].map((g) => list.filter((s) => s.group === g));
+  for (const cat of DRILL_CATEGORIES) {
+    const inCat = practices.filter((s) => s.category === cat.key);
+    if (!inCat.length) continue;
+    const section = h("section", "cat-section");
+    section.append(h("h2", "cat-title", `${cat.icon} ${cat.label}`));
+    for (const items of groupsOf(inCat)) section.append(groupBlock(items, false));
+    page.append(section);
+  }
+  app.replaceChildren(page);
+}
+
 // ---------- 再生画面 ----------
 let disposeViewer: (() => void) | null = null;
 
 function renderViewer(s: Scenario, me?: PositionGuide) {
   const lastStep = s.variants.good.steps.length - 1;
+  const drill = isDrill(s);
+  const home = PAGES[pageOf(s)];
+  saveStored(PAGE_KEY, pageOf(s));
   const roles = roleLabels(s);
 
   // 時間の状態: pos は 0〜lastStep の実数。整数 k は「ステップ k の終わり」、k-1〜k の間は「ステップ k の途中」
@@ -282,7 +338,7 @@ function renderViewer(s: Scenario, me?: PositionGuide) {
   const page = h("main", "viewer");
   const top = h("header", "viewer-header");
   const back = h("a", "back-link", "← もどる");
-  back.href = "#/";
+  back.href = home.hash; // そのシナリオがある方の一覧へ
   const titleBox = h("div", "viewer-titlebox");
   const titleEl = h("h1", "viewer-title");
   titleBox.append(titleEl, h("span", "pattern-chip", s.pattern));
@@ -396,6 +452,14 @@ function renderViewer(s: Scenario, me?: PositionGuide) {
     nextLink.append(h("strong", "", `▶ つづき: ${s.next!.label}`), h("small", "", `${childTitle(nextTarget)}(${nextTarget.pattern})`));
     pPanel.body.append(nextLink);
   }
+  // 練習 → 試合: この技術を使う試合の場面
+  const matchTarget = s.match && matches.find((x) => x.id === s.match!.id);
+  if (matchTarget) {
+    const a = h("a", "next-link match-link");
+    a.href = `#/s/${matchTarget.id}`;
+    a.append(h("strong", "", "▶ 試合ではこの場面"), h("small", "", `${childTitle(matchTarget)}(${matchTarget.pattern})`));
+    pPanel.body.append(a);
+  }
   infoCard.append(qPanel.el, pPanel.el);
 
   const dots = h("ol", "step-dots");
@@ -447,13 +511,19 @@ function renderViewer(s: Scenario, me?: PositionGuide) {
 
   const legend = h("div", "legend");
   legend.innerHTML = `
-    <span class="chip home">味方</span><span class="chip away">相手</span>
+    <span class="chip home"></span><span class="chip away"></span>
+    ${drill ? `<span class="lg"><svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="#ff8a00" stroke="#c25e00" stroke-width="1"/><circle cx="5" cy="5" r="1.6" fill="#ffd08a"/></svg>コーン</span>` : ""}
     <span class="lg"><svg viewBox="0 0 24 8" aria-hidden="true"><line x1="1" y1="4" x2="18" y2="4" stroke="#fff" stroke-width="2" stroke-dasharray="4 3"/><path d="M17,0 L23,4 L17,8z" fill="#fff"/></svg>走る</span>
     <span class="lg"><svg viewBox="0 0 24 8" aria-hidden="true"><line x1="1" y1="4" x2="18" y2="4" stroke="#ffd400" stroke-width="2.6"/><path d="M17,0 L23,4 L17,8z" fill="#ffd400"/></svg>パス</span>
     <span class="lg"><svg viewBox="0 0 24 8" aria-hidden="true"><line x1="2" y1="4" x2="18" y2="4" stroke="#fff3b0" stroke-width="2.6" stroke-dasharray="0.1 4" stroke-linecap="round"/><path d="M17,0 L23,4 L17,8z" fill="#fff3b0"/></svg>ドリブル</span>
     <span class="lg"><svg viewBox="0 0 24 8" aria-hidden="true"><line x1="1" y1="4" x2="18" y2="4" stroke="#ff3b30" stroke-width="2" stroke-dasharray="4 3"/><path d="M17,0 L23,4 L17,8z" fill="#ff3b30"/></svg>ミスの動き</span>
     <span class="lg lg-look" hidden><svg viewBox="0 0 24 12" aria-hidden="true"><path d="M2,6 L20,0.5 A12,12 0 0 1 20,11.5 Z" fill="rgba(255,244,160,0.6)" stroke="#c9b800" stroke-width="0.8" stroke-dasharray="1.6 1"/></svg>見た方向</span>
     <span class="lg lg-ghost" hidden><svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="none" stroke="#9cc3ff" stroke-width="1.2" stroke-dasharray="2 1.4"/></svg>お手本の位置</span>`;
+  // チームの名前(試合の場面は 味方/相手、練習メニューは 練習する人/コーチ など)。相手のいない練習では出さない
+  legend.querySelector(".chip.home")!.textContent = s.teams.home.name;
+  const awayChip = legend.querySelector(".chip.away")!;
+  if (s.teams.away.players.length) awayChip.textContent = s.teams.away.name;
+  else awayChip.remove();
   const ghostLegend = legend.querySelector<HTMLElement>(".lg-ghost")!;
   // 見た方向(look)は使うシナリオのときだけ凡例に出す
   legend.querySelector<HTMLElement>(".lg-look")!.hidden = !Object.values(s.variants).some((v) => v.steps.some((st) => st.overlays.some((o) => o.type === "look")));
@@ -463,9 +533,21 @@ function renderViewer(s: Scenario, me?: PositionGuide) {
   dock.append(infoCard, dots, scrubber, controls, wordsPanel, legend);
 
   const note = h("details", "coach-note");
-  note.append(h("summary", "", "保護者・指導者の方へ(指導メモ)"), h("p", "note-theme", `テーマ: ${s.theme}`));
+  // 練習ページでは、指導者が準備・やり方をすぐ見られるよう最初から開いておく
+  note.open = drill;
+  note.append(h("summary", "", drill ? "指導者の方へ(練習のやり方)" : "保護者・指導者の方へ(指導メモ)"));
+  if (s.practice) {
+    const card = h("dl", "practice-card");
+    const rows: [string, string | undefined][] = [
+      ["準備", s.practice.setup], ["やり方", s.practice.howTo], ["回数", s.practice.reps],
+      ["声かけ", s.coachCue && `「${s.coachCue}」`], ["レベルアップ", s.practice.levelUp], ["安全", s.practice.safety],
+    ];
+    for (const [k, v] of rows) if (v) card.append(h("dt", "", k), h("dd", "", v));
+    note.append(card);
+  }
+  note.append(h("p", "note-theme", `テーマ: ${s.theme}`));
   if (s.coachNote) note.append(h("p", "", s.coachNote));
-  note.append(h("p", "note-formation", s.teams.home.formation === "3-3-1"
+  if (!drill) note.append(h("p", "note-formation", s.teams.home.formation === "3-3-1"
     ? "※ 味方・相手とも 3-3-1 の形で描いています。2-3-2 や 3-2-2 など、ほかの形のチームでも、ここで見せている考え方(原則)は同じです。"
     : `※ 味方は ${s.teams.home.formation}、相手は ${s.teams.away.formation} の形で描いています。形がちがっても、考え方(原則)は同じです。`));
   // ポジション表示(背番号だけだと、自分のチームに置きかえにくい子のために)
@@ -475,9 +557,9 @@ function renderViewer(s: Scenario, me?: PositionGuide) {
   roleCheck.checked = !!me;
   roleCheck.addEventListener("change", () => page.classList.toggle("show-roles", roleCheck.checked));
   roleToggle.append(roleCheck, document.createTextNode(" ピッチと説明文に、ポジション(左MF・真ん中DF など)を表示する"));
-  note.append(roleToggle);
+  if (!drill) note.append(roleToggle);
   note.append(h("p", "note-point", `今日のポイント: ${plainText(s.keyPoint, s.targetGrade)}`));
-  if (s.coachCue) note.append(h("p", "note-cue", `声かけの例: 「${s.coachCue}」`));
+  if (s.coachCue && !drill) note.append(h("p", "note-cue", `声かけの例: 「${s.coachCue}」`));
   if (s.drills?.length) {
     const list = h("ul", "note-drills");
     for (const d of s.drills) {
@@ -486,6 +568,13 @@ function renderViewer(s: Scenario, me?: PositionGuide) {
       for (const [k, v] of [["人数", d.players], ["広さ", d.area], ["ルール", d.rule], ["成功の目安", d.success]]) meta.append(h("dt", "", k), h("dd", "", v));
       li.append(h("strong", "", d.title), meta);
       if (d.note) li.append(h("span", "drill-note", d.note));
+      // 試合 → 練習: 練習ページのシナリオで動きを見せる
+      const shown = d.id && practices.find((x) => x.id === d.id);
+      if (shown) {
+        const a = h("a", "drill-link", "▶ 動きで見る");
+        a.href = `#/s/${shown.id}`;
+        li.append(a);
+      }
       list.append(li);
     }
     note.append(h("p", "note-head", "関連する練習"), list);
@@ -645,7 +734,7 @@ function renderViewer(s: Scenario, me?: PositionGuide) {
     const atEnd = pos >= lastStep;
     titleEl.textContent = revealed ? s.title : `? ${childTitle(s)}`;
     titleEl.classList.toggle("asking", !revealed);
-    document.title = `${revealed ? s.title : childTitle(s)} | サッカー動き方ずかん`;
+    document.title = `${revealed ? s.title : childTitle(s)} | ${home.title}`;
     for (const [m, b] of tabButtons) {
       b.classList.toggle("active", m === mode);
       b.setAttribute("aria-selected", String(m === mode));
@@ -715,7 +804,10 @@ function route() {
   disposeViewer = null;
   const m = location.hash.match(/^#\/s\/([a-z0-9-]+)(?:\?pos=([a-z]+))?$/);
   const s = m && scenarios.find((x) => x.id === m[1]);
+  // ハッシュなしで開いた時は、最後に開いた方のページ。#/ を直接開いた時はずかん
+  if (!location.hash || location.hash === "#") history.replaceState(null, "", PAGES[readPage()].hash);
   if (s) renderViewer(s, positionOf(m[2]));
+  else if (location.hash === PAGES.practice.hash) renderPractice();
   else renderList();
   window.scrollTo(0, 0);
 }

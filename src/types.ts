@@ -8,8 +8,12 @@ export type Grade = "low" | "middle" | "high";
 /** 結末の種類: チャンス(緑)/ ピンチ(赤)/ 残念(灰。チャンスを逃した・相手ボールになった) */
 export type OutcomeTone = "chance" | "pinch" | "miss";
 export type GoalSide = "home" | "away";
-/** 種類: ボールを前へ運ぶ / ゴールをねらう / ボールを取る・守る / 切りかえ / リスタート・キーパー */
-export type Category = "build" | "attack" | "defend" | "transition" | "restart";
+/** 種類: ボールを前へ運ぶ / ゴールをねらう / ボールを取る・守る / 切りかえ / リスタート・キーパー(試合の場面)、ドリブル / パス(練習メニュー) */
+export type Category = "build" | "attack" | "defend" | "transition" | "restart" | "dribble" | "pass";
+/** 試合の場面 / 練習メニューの説明 */
+export type ScenarioKind = "match" | "drill";
+/** ボールに当てる所: 足の内がわ / 外がわ / うら / くつひもの所 / つま先 */
+export type FootSurface = "inside" | "outside" | "sole" | "instep" | "toe";
 
 export interface Point {
   x: number;
@@ -90,6 +94,19 @@ export interface LookOverlay {
   judgement?: Judgement;
 }
 
+/** コーン(練習メニュー用) */
+export interface ConeOverlay extends Point {
+  type: "cone";
+}
+
+/** コーン 2 本の門(練習メニュー用) */
+export interface GateOverlay {
+  type: "gate";
+  a: Point;
+  b: Point;
+  label?: string;
+}
+
 export type Overlay =
   | ArrowOverlay
   | PassLaneOverlay
@@ -98,7 +115,21 @@ export type Overlay =
   | CalloutOverlay
   | OffsideLineOverlay
   | ShotConeOverlay
-  | LookOverlay;
+  | LookOverlay
+  | ConeOverlay
+  | GateOverlay;
+
+/** 足の使い方(練習メニュー用)。説明欄に「あしもと」図、ピッチに軸足の足あとを出す */
+export interface Foot {
+  player: PlayerId;
+  kick: "right" | "left";
+  surface: FootSurface;
+  /** 軸足のつま先の向き(度)。0 = ボールを送る方向、プラスは右回り */
+  plant?: number;
+  /** ボールを送る先。省略時はボール(動かない時は選手)の動きの向き */
+  toward?: PlayerId | Point;
+  judgement?: Judgement;
+}
 
 export interface Step {
   phase: Phase;
@@ -111,6 +142,7 @@ export interface Step {
   players: Record<PlayerId, Point>;
   ball: Ball;
   overlays: Overlay[];
+  foot?: Foot;
 }
 
 export interface Variant {
@@ -143,6 +175,17 @@ export interface Drill {
   rule: string;
   success: string;
   note?: string;
+  /** この練習を動きで見せる練習メニュー(kind: drill)の id */
+  id?: string;
+}
+
+/** 練習メニューの指導者向けカード(準備・やり方・回数・レベルアップ・安全) */
+export interface Practice {
+  setup: string;
+  howTo: string;
+  reps: string;
+  levelUp?: string;
+  safety?: string;
 }
 
 /** ずかん全体の合言葉 */
@@ -171,6 +214,8 @@ export interface Counterpart {
 
 export interface Scenario {
   schemaVersion: 2;
+  /** 省略時は match(試合の場面) */
+  kind?: ScenarioKind;
   id: string;
   /** テーマ名(同じテーマの別パターンは同じタイトル)。答えが書いてあるので、問いかけの後に出す */
   title: string;
@@ -204,6 +249,12 @@ export interface Scenario {
   ruleNote?: string;
   /** つづきの場面 */
   next?: NextLink;
+  /** 練習メニューの広さ(m)。座標は X=0〜w、Y=0〜h */
+  area?: { w: number; h: number };
+  /** 練習メニューの指導者向けカード */
+  practice?: Practice;
+  /** 練習メニューから、この技術を使う試合の場面へ */
+  match?: { id: string };
   teams: { home: Team; away: Team };
   variants: Record<VariantKey, Variant>;
 }

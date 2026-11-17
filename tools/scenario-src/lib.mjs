@@ -47,8 +47,16 @@ export const offsideLine = (defending = "away") => ({ type: "offsideLine", defen
 export const look = (player, at, judgement) => ({ type: "look", player, at: typeof at === "string" && at.includes(",") ? pt(at) : at, ...(judgement ? { judgement } : {}) });
 export const shotCone = (from, goal, extra = {}) => ({ type: "shotCone", from, goal, ...extra });
 export const ball = (c, owner, motion, extra = {}) => ({ ...pt(c), owner, motion, ...extra });
+// 練習メニュー用: コーン・門・足の使い方
+export const cone = (c) => ({ type: "cone", ...pt(c) });
+export const gate = (a, b, label) => ({ type: "gate", a: pt(a), b: pt(b), ...(label ? { label } : {}) });
+/** foot("h7", "inside", { kick: "left", plant: 20, toward: "h8" | "3,4", judgement: "bad" })。kick の省略時は右足 */
+export const foot = (player, surface, { kick = "right", toward, ...extra } = {}) => ({
+  player, kick, surface, ...extra, ...(toward ? { toward: typeof toward === "string" && toward.includes(",") ? pt(toward) : toward } : {}),
+});
 
-function variant(v, order) {
+/** props(コーン・門)は、全ステップの overlays の先頭に入れる(置いたままの道具なので) */
+function variant(v, order, props = []) {
   const ps = players(v.table, order);
   return {
     label: v.label,
@@ -62,7 +70,8 @@ function variant(v, order) {
       ...(st.focus ? { focus: st.focus } : {}),
       players: ps[i],
       ball: st.ball,
-      overlays: st.ov ?? [],
+      overlays: [...props, ...(st.ov ?? [])],
+      ...(st.foot ? { foot: st.foot } : {}),
     })),
   };
 }
@@ -103,10 +112,58 @@ export function build(def, outDir) {
     },
     variants: { good, bad },
   };
+  write(scenario, outDir);
+}
+
+/**
+ * 練習メニュー(kind: drill)。座標は area(幅 w × 奥行き h m)の中で、Y=0 が画面の上。
+ * home / away は { name, players: [["h7", "CM"], ...] }(出てくる人だけ)。表の行も同じ人だけ書く。
+ * props(cone / gate)は全ステップに入る。よくあるミスの結末は miss(△ 残念…)
+ */
+export function buildDrill(def, outDir) {
+  const meta = GROUPS[def.group];
+  if (!meta) throw new Error(`${def.id}: group "${def.group}" が groups.mjs にありません`);
+  const team = (t = { name: "コーチ", players: [] }) => ({
+    name: t.name,
+    formation: "0-0",
+    players: t.players.map(([id, role]) => ({ id, number: Number(id.slice(1)), role })),
+  });
+  const teams = { home: team(def.home), away: team(def.away) };
+  const order = [...teams.home.players, ...teams.away.players].map((p) => p.id);
+  const props = def.props ?? [];
+  const good = variant({ label: "お手本", tone: "chance", ...def.good }, order, props);
+  const bad = variant({ label: "よくあるミス", tone: "miss", ...def.bad, steps: def.bad.steps.map((st, i) => st ?? def.good.steps[i]) }, order, props);
+  bad.steps[0] = { ...good.steps[0], players: good.steps[0].players };
+  write({
+    schemaVersion: 2,
+    kind: "drill",
+    id: def.id,
+    title: def.title,
+    questionTitle: meta.questionTitle,
+    category: def.category,
+    group: def.group,
+    pattern: def.pattern,
+    theme: def.theme,
+    coachNote: def.coachNote,
+    coachCue: def.coachCue,
+    targetGrade: "middle",
+    question: def.question,
+    keyPoint: def.keyPoint,
+    choices: def.choices,
+    next: def.next,
+    area: def.area,
+    practice: def.practice,
+    match: def.match,
+    teams,
+    variants: { good, bad },
+  }, outDir);
+}
+
+function write(scenario, outDir) {
   const json = JSON.stringify(scenario, null, 2)
     .replace(/\{\n\s+("x": [^,]+),\n\s+("y": [^\n]+)\n\s+\}/g, "{ $1, $2 }")
     .replace(/\[\n\s+("[ah]\d+"),\n\s+("[ah]\d+"),\n\s+("[ah]\d+")\n\s+\]/g, "[$1, $2, $3]")
     .replace(/\[\n\s+("[ah]\d+"),\n\s+("[ah]\d+")\n\s+\]/g, "[$1, $2]")
     .replace(/\[\n\s+("[ah]\d+")\n\s+\]/g, "[$1]");
-  writeFileSync(`${outDir}/${def.id}.json`, json + "\n");
+  writeFileSync(`${outDir}/${scenario.id}.json`, json + "\n");
 }

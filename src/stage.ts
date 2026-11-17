@@ -1,7 +1,7 @@
 // 1パターン(おてほん/ミス)分のピッチ描画。時間の管理は main.ts が行い、ここは「ステップ i の進捗 t」の1コマを描く
 import { GLOSSARY } from "./glossary";
 import type {
-  ArrowOverlay, Ball, GoalSide, Grade, LookOverlay, OutcomeTone, Overlay, PlayerId, Point, Role, Scenario, ShotConeOverlay, Step, Variant, VariantKey,
+  ArrowOverlay, Ball, Foot, FootSurface, GoalSide, Grade, LookOverlay, OutcomeTone, Overlay, PlayerId, Point, Role, Scenario, ShotConeOverlay, Step, Variant, VariantKey,
 } from "./types";
 
 const NS = "http://www.w3.org/2000/svg";
@@ -13,6 +13,8 @@ const BANNER = { x: 3, w: 44, h: 9 }; // 結末バナーの横位置・大きさ
 const GOAL_X = [22.5, 27.5] as const;
 const GOAL_LINE_Y: Record<GoalSide, number> = { away: 0, home: 68 };
 const BANNER_SUB: Record<OutcomeTone, string> = { chance: "◎ チャンス!", pinch: "× ピンチ!", miss: "△ 残念…" };
+const DRILL_BANNER_SUB: Record<OutcomeTone, string> = { ...BANNER_SUB, chance: "◎ できた!" };
+const CONE_R = 0.9;
 const TOKEN = /\{([ha][1-9][0-9]?)\}/g;
 let stageSeq = 0;
 
@@ -168,6 +170,100 @@ function drawField(g: SVGGElement, uid: string, mini: boolean): SVGRectElement[]
   return goals;
 }
 
+/** 練習メニューの広さ(m)を、ピッチと同じ 50×68 の描画範囲いっぱいに拡大する変換(選手の丸や文字の大きさは試合の場面と同じ) */
+interface Fit {
+  k: number;
+  ox: number;
+  oy: number;
+  w: number;
+  h: number;
+}
+function fitArea(area: { w: number; h: number }): Fit {
+  const k = Math.min(50 / area.w, 68 / area.h);
+  return { k, ox: (50 - area.w * k) / 2, oy: (68 - area.h * k) / 2, w: area.w * k, h: area.h * k };
+}
+
+/** 練習メニューの座標(m)を描画用の座標に直した variant */
+function fitVariant(v: Variant, f: Fit): Variant {
+  const P = (p: Point): Point => ({ x: f.ox + p.x * f.k, y: f.oy + p.y * f.k });
+  const ov = (o: Overlay): Overlay => {
+    switch (o.type) {
+      case "arrow": return { ...o, ...(o.from ? { from: P(o.from) } : {}), ...(o.to ? { to: P(o.to) } : {}) };
+      case "space": return { ...o, ...P(o), rx: o.rx * f.k, ry: o.ry * f.k };
+      case "look": return typeof o.at === "string" ? o : { ...o, at: P(o.at) };
+      case "cone": return { ...o, ...P(o) };
+      case "gate": return { ...o, a: P(o.a), b: P(o.b) };
+      default: return o;
+    }
+  };
+  const foot = (x: Foot): Foot => (typeof x.toward === "object" ? { ...x, toward: P(x.toward) } : x);
+  return {
+    ...v,
+    steps: v.steps.map((st) => ({
+      ...st,
+      players: Object.fromEntries(Object.entries(st.players).map(([id, p]) => [id, P(p)])),
+      ball: { ...st.ball, ...P(st.ball) },
+      overlays: st.overlays.map(ov),
+      ...(st.foot ? { foot: foot(st.foot) } : {}),
+    })),
+  };
+}
+
+/** 練習のエリア: ゴール・ライン・攻める方向は描かず、広さの枠だけ */
+function drawArea(g: SVGGElement, f: Fit, area: { w: number; h: number }, mini: boolean) {
+  for (let i = 0; i < 10; i++) {
+    svg("rect", { x: 0, y: i * 6.8, width: 50, height: 6.8, class: i % 2 ? "turf-b" : "turf-a" }, g);
+  }
+  svg("rect", { x: f.ox, y: f.oy, width: f.w, height: f.h, class: "area-line" }, g);
+  if (mini) return;
+  const size = svg("text", { x: 25, y: 71.6, class: "goal-label", "text-anchor": "middle", "dominant-baseline": "central" }, g);
+  size.textContent = `広さ よこ ${area.w}m × たて ${area.h}m`;
+}
+
+// ---------- あしもとのアップ図(説明欄) ----------
+/** 右足を上から見た形(つま先が上、親指が左)。左足は左右反転して使う */
+const FOOT_PATH = "M-1.5,-11 C2.5,-11.5 5,-8 5,-3 C5,2 4,7 3,9.5 C2,11.5 -2,11.5 -3,9.5 C-4,7 -4.5,2 -4.6,-3 C-4.8,-8 -4.5,-10.5 -1.5,-11 Z";
+const SURFACE_LABEL: Record<FootSurface, string> = {
+  inside: "インサイド(足の内がわ)",
+  outside: "アウトサイド(足の外がわ)",
+  sole: "足のうら",
+  instep: "インステップ(くつひもの所)",
+  toe: "つま先",
+};
+/** 当てる所ごとの、けり足の置き方(ボールは上へ送る)と、ぬる所(右足の形の上の座標)・じく足の場所 */
+const SURFACE_FIG: Record<FootSurface, { kick: string; mark: string; plant: Point }> = {
+  inside: { kick: "translate(4 -1) rotate(90)", mark: "M-6,-8 H-1.6 V6 H-6 Z", plant: { x: -13, y: -14 } },
+  outside: { kick: "translate(-1 -1) rotate(-90)", mark: "M1.6,-7 H6 V6 H1.6 Z", plant: { x: -14, y: 12 } },
+  instep: { kick: "translate(0 5)", mark: "M-2.6,-6 C-2.6,-8 2.6,-8 2.6,-6 V3 C2.6,5 -2.6,5 -2.6,3 Z", plant: { x: -12, y: -10 } },
+  toe: { kick: "translate(0 5)", mark: "M-6,-13 H6 V-7.6 H-6 Z", plant: { x: -12, y: -10 } },
+  sole: { kick: "translate(0 -8)", mark: "M-6,-12 H6 V12 H-6 Z", plant: { x: -12, y: 2 } },
+};
+let figSeq = 0;
+function footFigure(foot: Foot): SVGSVGElement {
+  const fig = SURFACE_FIG[foot.surface];
+  const m = foot.kick === "left" ? -1 : 1; // 左足でける時は図を左右反転する
+  const root = svg("svg", { viewBox: "-24 -30 48 60", class: `foot-svg ${foot.judgement === "bad" ? "bad" : "good"}`, role: "img" });
+  root.setAttribute("aria-label", `${foot.kick === "left" ? "左" : "右"}足の${SURFACE_LABEL[foot.surface]}で、ボールにさわる`);
+  const id = `foot${++figSeq}`;
+  const clip = svg("clipPath", { id }, svg("defs", {}, root));
+  svg("path", { d: FOOT_PATH }, clip);
+  svg("path", { d: "M0,-29 L3.5,-24 L1.2,-24 L1.2,-20 L-1.2,-20 L-1.2,-24 L-3.5,-24 Z", class: "foot-dir" }, root);
+  const g = svg("g", { transform: `scale(${m} 1)` }, root);
+  // じく足(けらない方の足)。0° = ボールを送る方向
+  const plant = svg("g", { transform: `translate(${fig.plant.x} ${fig.plant.y}) rotate(${m * (foot.plant ?? 0)}) scale(-1 1)` }, g);
+  svg("path", { d: FOOT_PATH, class: "foot-plant" }, plant);
+  const ballG = svg("g", { transform: "translate(0 -12)" }, g);
+  svg("circle", { r: 6, class: "foot-ball" }, ballG);
+  svg("path", { d: "M0,-2.7 L2.6,-0.8 L1.6,2.2 L-1.6,2.2 L-2.6,-0.8 Z", class: "ball-patch" }, ballG);
+  const kick = svg("g", { transform: fig.kick, class: foot.surface === "sole" ? "foot-on-ball" : "" }, g);
+  svg("path", { d: FOOT_PATH, class: "foot-kick" }, kick);
+  svg("path", { d: fig.mark, class: "foot-mark", "clip-path": `url(#${id})` }, kick);
+  svg("path", { d: FOOT_PATH, class: "foot-edge" }, kick);
+  const label = svg("text", { x: m * fig.plant.x, y: fig.plant.y + 14.5, class: "foot-label", "text-anchor": "middle" }, root);
+  label.textContent = "じく足";
+  return root;
+}
+
 export interface StageOptions {
   mini?: boolean;
   /** 比較表示のとき、この variant(おてほん)の位置を薄く重ねる */
@@ -190,7 +286,11 @@ export class Stage {
   private readonly labelLayer: SVGGElement;
   private readonly fxLayer: SVGGElement;
   private readonly bannerLayer: SVGGElement;
+  private readonly propLayer: SVGGElement;
   private readonly goals: SVGRectElement[];
+  /** 練習メニュー(kind: drill)のときの、広さ → 描画座標の変換 */
+  private readonly drill: Fit | null;
+  private readonly footBox: HTMLElement | null = null;
   private readonly players = new Map<PlayerId, { g: SVGGElement; ring: SVGCircleElement; nose: SVGGElement }>();
   private readonly ballG: SVGGElement;
   private readonly ballShadow: SVGEllipseElement;
@@ -204,10 +304,12 @@ export class Stage {
   private goalFx = false;
 
   constructor(scenario: Scenario, readonly key: VariantKey, opts: StageOptions = {}) {
-    this.variant = scenario.variants[key];
+    this.drill = scenario.kind === "drill" && scenario.area ? fitArea(scenario.area) : null;
+    const fit = (v: Variant) => (this.drill ? fitVariant(v, this.drill) : v);
+    this.variant = fit(scenario.variants[key]);
     this.grade = scenario.targetGrade;
     this.mini = !!opts.mini;
-    this.ghost = opts.ghost;
+    this.ghost = opts.ghost && fit(opts.ghost);
     this.el = html("section", `stage stage-${key}${this.mini ? " stage-mini" : ""}`);
 
     if (!this.mini) {
@@ -222,7 +324,10 @@ export class Stage {
     this.el.appendChild(this.svgEl);
     this.defineDefs();
 
-    this.goals = drawField(svg("g", {}, this.svgEl), this.uid, this.mini);
+    const fieldG = svg("g", {}, this.svgEl);
+    this.goals = this.drill ? [] : drawField(fieldG, this.uid, this.mini);
+    if (this.drill) drawArea(fieldG, this.drill, scenario.area!, this.mini);
+    this.propLayer = svg("g", { class: "props" }, this.svgEl); // コーン・門(ステップが変わっても消えない道具なので、オーバーレイのように出し直さない)
     this.trailLayer = svg("g", { class: "trails" }, this.svgEl);
     this.ghostLayer = svg("g", { class: "ghosts" }, this.svgEl);
     this.overlayLayer = svg("g", { class: "overlays" }, this.svgEl);
@@ -259,6 +364,11 @@ export class Stage {
     const live = html("div", "caption-live", stack);
     this.captionTitle = html("p", "caption-title", live);
     this.captionText = html("p", "caption-text", live);
+    // 足の使い方があるときは、説明文の横に「あしもと」のアップ図を出す(高さが変わらないよう、ないステップでも場所は取っておく)
+    if (!this.mini && this.variant.steps.some((st) => st.foot)) {
+      caption.classList.add("has-foot");
+      this.footBox = html("div", "foot-box", caption);
+    }
     if (!this.mini) {
       this.variant.steps.forEach((step, k) => {
         const sizer = html("div", "caption-sizer", stack);
@@ -330,6 +440,17 @@ export class Stage {
     const step = this.variant.steps[i];
     this.captionTitle.textContent = `${i + 1}. ${step.title}`;
     renderRichText(step.explanation, this.captionText, this.grade, this.roles);
+    if (this.footBox) {
+      // このステップに足の使い方がなければ、直前のものを出したままにする
+      const foot = this.variant.steps.slice(0, i + 1).reverse().find((st) => st.foot)?.foot;
+      this.footBox.classList.toggle("empty", !foot);
+      if (!foot) return this.footBox.replaceChildren();
+      const label = html("p", "foot-text");
+      label.textContent = SURFACE_LABEL[foot.surface];
+      const head = html("p", "foot-head");
+      head.textContent = `あしもと(${foot.kick === "left" ? "左" : "右"}足)`;
+      this.footBox.replaceChildren(head, footFigure(foot), label);
+    }
   }
 
   private focusOf(step: Step): PlayerId[] {
@@ -351,7 +472,8 @@ export class Stage {
     const carried = cur.ball.motion === "hold" || cur.ball.motion === "dribble";
     if (carried && owner && prev.ball.owner === owner) {
       const d = unit(lerp(this.ballDir(prev.ball, prev, owner), this.ballDir(cur.ball, cur, owner), e));
-      return { x: pos[owner].x + d.x * BALL_GAP, y: pos[owner].y + d.y * BALL_GAP };
+      const gap = this.ballGap(prev, owner) + (this.ballGap(cur, owner) - this.ballGap(prev, owner)) * e;
+      return { x: pos[owner].x + d.x * gap, y: pos[owner].y + d.y * gap };
     }
     const from = this.ballRest(prev);
     const to = this.ballRest(cur);
@@ -364,7 +486,17 @@ export class Stage {
     if (!owner) return step.ball;
     const d = this.ballDir(step.ball, step, owner);
     const p = step.players[owner];
-    return { x: p.x + d.x * BALL_GAP, y: p.y + d.y * BALL_GAP };
+    const gap = this.ballGap(step, owner);
+    return { x: p.x + d.x * gap, y: p.y + d.y * gap };
+  }
+
+  /**
+   * 持ち主と保持中のボールの間。試合の場面は丸に隠れない一定の間で描く。
+   * 練習メニューは「ボールが足から遠い/近い」を見せるため、座標どおりの間(ただし丸に隠れない間以上)
+   */
+  private ballGap(step: Step, owner: PlayerId) {
+    const p = step.players[owner];
+    return this.drill && p ? Math.max(BALL_GAP, dist(step.ball, p)) : BALL_GAP;
   }
 
   private ballDir(ball: Ball, step: Step, owner: PlayerId): Point {
@@ -378,16 +510,43 @@ export class Stage {
   private buildStep(i: number, cur: Step, prev: Step, focus: Set<PlayerId>) {
     this.builtStep = i;
     this.updaters = [];
-    for (const layer of [this.trailLayer, this.ghostLayer, this.overlayLayer, this.labelLayer]) layer.replaceChildren();
+    for (const layer of [this.propLayer, this.trailLayer, this.ghostLayer, this.overlayLayer, this.labelLayer]) layer.replaceChildren();
+    this.buildProps(cur);
     this.buildTrails(i, focus);
     this.buildGhosts(i);
     this.buildOverlays(i, cur, prev);
   }
 
   // ---------- 足あと・ゴースト ----------
-  /** 強調している選手の、これまでの動きを薄い線で残す */
+  /** コーンと門 */
+  private buildProps(cur: Step) {
+    const cone = (p: Point) => {
+      const g = svg("g", { class: "cone", transform: `translate(${p.x} ${p.y})` }, this.propLayer);
+      svg("circle", { r: CONE_R, class: "cone-base" }, g);
+      svg("circle", { r: CONE_R * 0.4, class: "cone-top" }, g);
+    };
+    for (const o of cur.overlays) {
+      if (o.type === "cone") cone(o);
+      if (o.type !== "gate") continue;
+      svg("line", { x1: o.a.x, y1: o.a.y, x2: o.b.x, y2: o.b.y, class: "gate-line" }, this.propLayer);
+      cone(o.a);
+      cone(o.b);
+      if (o.label && !this.mini) {
+        const t = svg("text", { x: (o.a.x + o.b.x) / 2, y: (o.a.y + o.b.y) / 2 - 1.6, class: "gate-label", "text-anchor": "middle", "dominant-baseline": "central" }, this.propLayer);
+        t.textContent = o.label;
+      }
+    }
+  }
+
+  /** 強調している選手の、これまでの動きを薄い線で残す。練習メニューでは、ボールにさわった所も点で残す(タッチの回数が分かる) */
   private buildTrails(i: number, focus: Set<PlayerId>) {
     if (this.mini || i === 0) return;
+    if (this.drill) {
+      for (const st of this.variant.steps.slice(0, i)) {
+        const b = this.ballRest(st);
+        svg("circle", { cx: b.x, cy: b.y, r: 0.45, class: "ball-dot" }, this.trailLayer);
+      }
+    }
     for (const id of focus) {
       const past = this.variant.steps.slice(0, i).map((s) => s.players[id]);
       const pts = [...past, this.variant.steps[i].players[id]];
@@ -430,7 +589,7 @@ export class Stage {
   private buildOverlays(i: number, cur: Step, prev: Step) {
     const layer = this.overlayLayer;
     // 面 → 線 → 矢印 → 吹き出し の順に重ねる
-    const order: Overlay["type"][] = ["look", "shotCone", "space", "triangle", "offsideLine", "passLane", "arrow", "callout"];
+    const order: Overlay["type"][] = ["cone", "gate", "look", "shotCone", "space", "triangle", "offsideLine", "passLane", "arrow", "callout"];
     const sorted = [...cur.overlays].sort((a, b) => order.indexOf(a.type) - order.indexOf(b.type));
     for (const o of sorted) {
       switch (o.type) {
@@ -469,8 +628,12 @@ export class Stage {
         case "look":
           this.buildLook(o);
           break;
+        case "cone":
+        case "gate":
+          break; // buildProps で描く
       }
     }
+    if (cur.foot && !this.mini) this.buildFootprint(cur.foot, prev, cur);
     // オフサイドのパス: 受けた瞬間に笛の吹き出しを出す
     const receiver = cur.ball.offside ? cur.ball.owner : null;
     if (receiver && i > 0 && !this.mini) {
@@ -524,6 +687,34 @@ export class Stage {
       fan.setAttribute("d", `M${p.x},${p.y} L${at(a - half)} A${r},${r} 0 0 1 ${at(a + half)} Z`);
       nose?.setAttribute("transform", `rotate(${((a * 180) / Math.PI + 90).toFixed(1)})`);
     });
+  }
+
+  /**
+   * 軸足の足あと: ボールにさわった時(前ステップの終わり)の選手の横に、送る方向(+ plant の角度)へ向けて置く。
+   * 右足でける時は、送る方向の左側にじく足(左足)がある
+   */
+  private buildFootprint(foot: Foot, prev: Step, cur: Step) {
+    const at = prev.players[foot.player];
+    if (!at) return;
+    let dir = { x: 0, y: 0 };
+    if (foot.toward) {
+      const to = typeof foot.toward === "string" ? cur.players[foot.toward] : foot.toward;
+      if (to) dir = unit({ x: to.x - at.x, y: to.y - at.y });
+    }
+    for (const [a, b] of [[this.ballRest(prev), this.ballRest(cur)], [at, cur.players[foot.player]]]) {
+      if (dir.x || dir.y) break;
+      if (dist(a, b) > 0.5) dir = unit({ x: b.x - a.x, y: b.y - a.y });
+    }
+    if (!dir.x && !dir.y) dir = { x: 0, y: -1 };
+    const m = foot.kick === "left" ? -1 : 1;
+    const side = { x: dir.y * m, y: -dir.x * m }; // 送る方向の左(左足でける時は右)
+    const gap = PLAYER_R + 1.1;
+    const deg = (Math.atan2(dir.y, dir.x) * 180) / Math.PI + 90 + (foot.plant ?? 0);
+    svg("path", {
+      d: FOOT_PATH,
+      class: `ov-foot${foot.judgement === "bad" ? " bad" : ""}`,
+      transform: `translate(${at.x + side.x * gap} ${at.y + side.y * gap}) rotate(${deg.toFixed(1)}) scale(${-0.11 * m} 0.11)`,
+    }, this.overlayLayer);
   }
 
   /** シュートコース: ボール(または選手)と両ゴールポストを結ぶ三角形。centerLine はその真ん中の線(キーパーの立つ目安) */
@@ -610,7 +801,7 @@ export class Stage {
   // ---------- ゴールの演出・結末バナー ----------
   /** ボールがゴールに入った瞬間に、ネットの揺れ・波紋・紙ふぶきを出す */
   private drawGoalFx(ball: Point | null) {
-    if (this.mini || !!ball === this.goalFx) return;
+    if (this.mini || this.drill || !!ball === this.goalFx) return;
     this.goalFx = !!ball;
     this.fxLayer.replaceChildren();
     for (const goal of this.goals) goal.classList.remove("scored");
@@ -651,7 +842,7 @@ export class Stage {
     layer.classList.toggle("delayed", delayed);
     svg("rect", { x: BANNER.x, y: top, width: BANNER.w, height: BANNER.h, rx: 2.2, class: `banner-bg ${tone}` }, layer);
     const sub = svg("text", { x: 25, y: top + 2.5, class: "banner-sub", "text-anchor": "middle", "dominant-baseline": "central" }, layer);
-    sub.textContent = BANNER_SUB[tone];
+    sub.textContent = (this.drill ? DRILL_BANNER_SUB : BANNER_SUB)[tone];
     const text = this.variant.outcomeBanner;
     const main = svg("text", { x: 25, y: top + 6.3, class: "banner-main", "text-anchor": "middle", "dominant-baseline": "central" }, layer);
     main.style.fontSize = String(Math.min(3.6, 38 / [...text].length));
@@ -663,7 +854,7 @@ export class Stage {
     const obstacles: { p: Point; r: number; w: number }[] = [];
     for (const [id, p] of Object.entries(pos)) obstacles.push({ p, r: PLAYER_R + 0.3, w: focus.has(id) ? 3 : 1 });
     obstacles.push({ p: ball, r: BALL_R + 0.3, w: 3 });
-    if (owner) {
+    if (owner && !this.drill) {
       // ボールを持っている選手が攻めるゴールまでのコース(ここで勝負が決まる)
       const goal = { x: 25, y: teamOf(owner) === "home" ? 0 : 68 };
       const n = Math.ceil(dist(ball, goal) / 2);
