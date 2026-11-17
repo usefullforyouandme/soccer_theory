@@ -13,6 +13,7 @@ const e2 = {
 build({
   ...e2,
   id: "throw-in-attack",
+  counterpart: { id: "throw-in-defense-own", label: "守る側から見る" },
   pattern: "相手ゴールに近い所で",
   question: "スローインだ。{h7}には相手がついている。どうすれば相手をはなせるかな?",
   keyPoint: "止まって待たずに、動いてマークを外そう!",
@@ -86,6 +87,7 @@ a9 26,30 26,29.5 26,29 26,29.5 26,30`,
 build({
   ...e2,
   id: "throw-in-defend",
+  counterpart: { id: "throw-in-defense-high", label: "守る側から見る" },
   pattern: "自分のゴールに近い所で",
   question: "自分のゴールに近い所でスローイン。{h6}はどうすれば安全に受けられるかな?",
   keyPoint: "ゴールに近い所ほど、動いて相手をはなしてから受けよう!",

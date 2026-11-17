@@ -32,6 +32,10 @@
   "question": "スローインだ。{h7}には相手がついている。どうすれば相手をはなせるかな?",
   "keyPoint": "止まって待たずに、動いてマークを外そう!",
   "ruleNote": "大会によっては、キックインのこともあるよ",
+  "counterpart": {
+    "id": "throw-in-defense-own",
+    "label": "守る側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",

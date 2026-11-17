@@ -40,6 +40,11 @@ const ORDER = [
   "w8-cm.mjs",
   "w8-wm.mjs",
   "w8-fw.mjs",
+  "w9-throw-in-defense.mjs",
+  "w9-free-kick.mjs",
+  "w9-open-body.mjs",
+  "w9-pass-and-move.mjs",
+  "w9-double-team.mjs",
 ];
 
 const check = process.argv.includes("--check");

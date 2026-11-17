@@ -32,6 +32,10 @@
   "question": "自分のゴールに近い所でスローイン。{h6}はどうすれば安全に受けられるかな?",
   "keyPoint": "ゴールに近い所ほど、動いて相手をはなしてから受けよう!",
   "ruleNote": "大会によっては、キックインのこともあるよ",
+  "counterpart": {
+    "id": "throw-in-defense-high",
+    "label": "守る側から見る"
+  },
   "teams": {
     "home": {
       "name": "味方",
