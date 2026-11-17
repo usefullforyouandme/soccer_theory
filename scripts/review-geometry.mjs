@@ -107,9 +107,20 @@ for (const file of readdirSync(dir).filter((x) => x.endsWith(".json")).sort()) {
         }
       }
     }
-    // 文章で「フリー・空いている」と言っている味方の最寄りの相手
-    if (/フリー|だれもいない|空いている|空いてる|ガラガラ/.test(st.explanation)) {
-      for (const h of new Set([...st.explanation.matchAll(/\{(h\d+)\}/g)].map((m) => m[1]))) {
+    // 文章で「フリー・空いている」と言っている味方の最寄りの相手。
+    // 対象は、キーワードと同じ文でその直前に出てくる味方(「{a3}が{h7}を止めに来た。{h9}はフリー」なら h9 だけ)。
+    // 同じ文に味方が出てこなければ、ボールを持っている味方(「{h7}から{h9}へ。…だれもいない」なら h9)。
+    const FREE = /フリー|だれもいない|空いている|空いてる|ガラガラ/;
+    if (FREE.test(st.explanation)) {
+      const targets = new Set();
+      for (const sent of st.explanation.split(/(?<=[。!?])/)) {
+        const k = sent.search(FREE);
+        if (k < 0) continue;
+        const hs = [...sent.slice(0, k).matchAll(/\{(h\d+)\}/g)].map((m) => m[1]);
+        const h = hs.length ? hs[hs.length - 1] : st.ball.owner?.[0] === "h" ? st.ball.owner : null;
+        if (h) targets.add(h);
+      }
+      for (const h of targets) {
         const n = away.filter((a) => a !== "a1").map((a) => [a, d(P[h], P[a])]).sort((x, y) => x[1] - y[1])[0];
         if (n[1] < 3) warn.push(`「空いている」${h} の ${n[1].toFixed(1)}m に相手 ${n[0]}`);
       }
