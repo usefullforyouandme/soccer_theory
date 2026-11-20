@@ -1876,3 +1876,387 @@ summary:focus-visible {
   font-weight: 700;
   text-decoration: none;
 }
+
+/* ---------- 一覧: 右はしのもくじ(src/toc.ts) ---------- */
+.cat-section,
+.group-block {
+  scroll-margin-top: 12px;
+}
+.list-page.has-toc {
+  max-width: 1480px;
+}
+.toc-list,
+.toc-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.toc-title {
+  font-size: 17px;
+  font-weight: 800;
+}
+.toc-count {
+  color: var(--muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.toc-sec-btn,
+.toc-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  text-align: left;
+  transition: background-color 0.15s;
+}
+.toc-sec-btn:hover,
+.toc-item:hover {
+  background: var(--bg);
+}
+.toc-sec-btn {
+  font-size: 16px;
+  font-weight: 800;
+}
+.toc-sec-label {
+  flex: 1;
+  min-width: 0;
+}
+.toc-short {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  font-size: 16px;
+}
+.toc-n {
+  flex: none;
+  min-width: 26px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+.toc-sec.is-active > .toc-sec-btn {
+  color: var(--good);
+}
+/* 区分を開く・閉じる(今見ている区分だけ開く) */
+.toc-items-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+.toc-items {
+  min-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  transition: visibility 0s 0.25s;
+}
+.toc-sec.is-active .toc-items-wrap,
+.toc-sheet .toc-items-wrap {
+  grid-template-rows: 1fr;
+}
+.toc-sec.is-active .toc-items,
+.toc-sheet .toc-items {
+  visibility: visible;
+  transition: none;
+}
+.toc-item {
+  position: relative;
+  padding-left: 18px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.35;
+}
+.toc-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.toc-badge {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--line);
+  font-size: 13px;
+  font-weight: 800;
+}
+/* 今見ている所: 色だけでなく、左の太い線と太字でも分かるようにする */
+.toc-item.is-active {
+  background: var(--good-soft);
+  font-weight: 800;
+}
+.toc-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--good);
+}
+.toc-item.is-active .toc-badge {
+  background: var(--good);
+  color: #fff;
+}
+.toc-top {
+  min-height: 44px;
+  margin-top: 6px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 15px;
+  font-weight: 700;
+}
+.toc-top:hover {
+  border-color: var(--good);
+}
+.toc-progress {
+  height: 4px;
+  margin: 8px 0;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.toc-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--good);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+/* PC 幅: ページの右に追従するもくじ */
+@media (min-width: 1100px) {
+  .list-page.has-toc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 272px;
+    gap: 0 28px;
+    align-items: start;
+  }
+  .toc {
+    position: sticky;
+    top: 16px;
+    margin-top: 16px;
+  }
+  .toc-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 32px);
+    padding: 12px 10px 10px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--card);
+    box-shadow: 0 6px 20px rgb(29 42 31 / 0.08);
+  }
+  .toc-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 8px;
+  }
+  .toc-progress {
+    margin: 8px 8px;
+  }
+  .toc-panel .toc-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+  .toc-rail,
+  .toc-bubble,
+  .toc-sheet {
+    display: none !important;
+  }
+}
+
+/* 狭い幅: 右はしの細い帯(区分のボタン)と、もくじのシート */
+@media (max-width: 1099px) {
+  .toc-panel {
+    display: none;
+  }
+  .list-page.has-toc {
+    padding-right: calc(62px + env(safe-area-inset-right));
+  }
+  .toc-rail {
+    position: fixed;
+    z-index: 30;
+    right: max(6px, env(safe-area-inset-right));
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: calc(100dvh - 24px);
+    padding: 4px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    background: rgb(255 255 255 / 0.92);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 6px 20px rgb(29 42 31 / 0.14);
+    touch-action: none;
+    scrollbar-width: none;
+  }
+  .toc-rail-btn {
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: none;
+    font-size: 18px;
+    font-weight: 800;
+    transition: background-color 0.15s, transform 0.15s;
+  }
+  .toc-rail-btn.is-active {
+    background: var(--good);
+    color: #fff;
+    box-shadow: 0 0 0 2px #fff inset;
+  }
+  .toc-rail.scrubbing .toc-rail-btn.is-active {
+    transform: scale(1.12);
+  }
+  .toc-open,
+  .toc-up {
+    color: var(--muted);
+  }
+  .toc-open {
+    border-bottom: 1px solid var(--line);
+    border-radius: 999px 999px 8px 8px;
+  }
+  .toc-up {
+    border-top: 1px solid var(--line);
+    border-radius: 8px 8px 999px 999px;
+  }
+  /* なぞっている時に、今の区分の名前を帯の左に出す */
+  .toc-bubble {
+    position: fixed;
+    z-index: 31;
+    right: calc(66px + env(safe-area-inset-right));
+    max-width: min(60vw, 320px);
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800;
+    transform: translateY(-50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+  }
+  .toc-bubble.on {
+    opacity: 1;
+  }
+  .toc-sheet {
+    position: fixed;
+    inset: auto 0 0;
+    width: 100%;
+    max-width: 640px;
+    max-height: min(82dvh, 760px);
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 20px 20px 0 0;
+    background: var(--card);
+    color: var(--ink);
+    box-shadow: 0 -8px 30px rgb(0 0 0 / 0.2);
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), overlay 0.28s allow-discrete, display 0.28s allow-discrete;
+  }
+  .toc-sheet[open] {
+    display: flex;
+    flex-direction: column;
+    transform: none;
+  }
+  @starting-style {
+    .toc-sheet[open] {
+      transform: translateY(100%);
+    }
+  }
+  .toc-sheet::backdrop {
+    background: rgb(0 0 0 / 0.4);
+  }
+  .toc-sheet-head {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 18px 12px 8px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  /* つまみ(シートだと分かるように) */
+  .toc-sheet-head::before {
+    content: "";
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    margin-left: -20px;
+    border-radius: 2px;
+    background: var(--line);
+  }
+  .toc-close {
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+    border: 0;
+    border-radius: 999px;
+    background: var(--bg);
+    font-size: 18px;
+  }
+  .toc-sheet-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 6px 10px max(16px, env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .toc-sheet .toc-sec + .toc-sec {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--line);
+  }
+}
+@media (max-width: 480px) {
+  .list-page.has-toc {
+    padding-right: calc(58px + env(safe-area-inset-right));
+  }
+  .toc-rail {
+    right: max(4px, env(safe-area-inset-right));
+  }
+}
+html:has(.toc-sheet[open]) {
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toc-items-wrap,
+  .toc-progress > span,
+  .toc-sheet,
+  .toc-rail-btn {
+    transition: none;
+  }
+}

@@ -2,6 +2,7 @@ import "./style.css";
 import { termsIn } from "./glossary";
 import { POSITIONS, SCENE_KINDS, type PositionGuide, type PositionKey } from "./positions";
 import { plainText, prefersReducedMotion, renderRichText, roleLabels, Stage } from "./stage";
+import { attachToc } from "./toc";
 import type { Category, Keyword, Scenario, VariantKey } from "./types";
 
 // scenarios/*.json をビルド時に同梱する(実行時の外部通信なし)
@@ -150,7 +151,10 @@ function groupBlock(items: Scenario[], numbered: boolean) {
   const first = items[0];
   const block = h("div", "group-block");
   const head = h("div", "group-head");
-  if (numbered && first.courseOrder) head.append(h("span", "course-no", String(first.courseOrder)));
+  if (numbered && first.courseOrder) {
+    head.append(h("span", "course-no", String(first.courseOrder)));
+    block.dataset.tocBadge = String(first.courseOrder);
+  }
   head.append(h("h3", "group-title", childTitle(first)));
   const chip = keywordChip(first);
   if (chip) head.append(chip);
@@ -199,6 +203,7 @@ function positionPitch(p: PositionGuide) {
 /** 一覧の「ポジションから選ぶ」: ポジションを1つ選び、解説と場面ごとのシナリオを出す */
 function positionSection(p: PositionGuide) {
   const section = h("section", "cat-section pos-section");
+  section.dataset.tocLabel = `${p.label}の場面`;
   const picker = h("div", "pos-picker");
   picker.setAttribute("role", "tablist");
   picker.setAttribute("aria-label", "ポジション");
@@ -228,6 +233,7 @@ function positionSection(p: PositionGuide) {
     const block = h("div", "group-block");
     const head = h("div", "group-head");
     const kind = SCENE_KINDS[scene.kind];
+    block.dataset.tocBadge = kind.icon;
     head.append(h("span", `scene-chip scene-${scene.kind}`, `${kind.icon} ${kind.label}`), h("h3", "group-title", scene.q));
     const grid = h("div", "card-grid");
     for (const s of items) grid.append(scenarioCard(s, p.key));
@@ -271,6 +277,7 @@ function renderList() {
       from = st.upTo;
       if (!inStage.length) continue;
       const section = h("section", "cat-section");
+      section.dataset.tocShort = String(COURSE_STAGES.indexOf(st) + 1);
       section.append(h("h2", "cat-title", st.label), h("p", "cat-lead", st.lead));
       for (const items of groupsOf(inStage)) section.append(groupBlock(items, true));
       page.append(section);
@@ -283,12 +290,14 @@ function renderList() {
       const inCat = matches.filter((s) => s.category === cat.key);
       if (!inCat.length) continue;
       const section = h("section", "cat-section");
+      section.dataset.tocShort = cat.icon;
+      section.dataset.tocLabel = cat.label;
       section.append(h("h2", "cat-title", `${cat.icon} ${cat.label}`));
       for (const items of groupsOf(inCat)) section.append(groupBlock(items, false));
       page.append(section);
     }
   }
-  app.replaceChildren(page);
+  showList(page);
 }
 
 /** 練習ページ: 練習の前に、指導者が子どもに動きで見せる。ドリブル/パスの 2 区分 */
@@ -304,11 +313,32 @@ function renderPractice() {
     const inCat = practices.filter((s) => s.category === cat.key);
     if (!inCat.length) continue;
     const section = h("section", "cat-section");
+    section.dataset.tocShort = cat.icon;
+    section.dataset.tocLabel = cat.label;
     section.append(h("h2", "cat-title", `${cat.icon} ${cat.label}`));
     for (const items of groupsOf(inCat)) section.append(groupBlock(items, false));
     page.append(section);
   }
+  showList(page);
+}
+
+/** 再生画面から一覧へ戻った時に、見ていた所へ戻すためのスクロール位置(ページ・並びごと) */
+const listScroll = new Map<string, number>();
+const listKey = () => {
+  if (location.hash === PAGES.practice.hash) return "practice";
+  const v = readListView();
+  return v === "position" ? `zukan:position:${readPosition().key}` : `zukan:${v}`;
+};
+let onList = false;
+let lastListKey = "";
+
+/** 一覧を画面に出し、右はしのもくじを付ける(並びを切りかえた時は付け直す) */
+let disposeToc: (() => void) | null = null;
+function showList(page: HTMLElement) {
+  disposeToc?.();
   app.replaceChildren(page);
+  disposeToc = attachToc(page);
+  lastListKey = listKey();
 }
 
 // ---------- 再生画面 ----------
@@ -801,16 +831,21 @@ function renderViewer(s: Scenario, me?: PositionGuide) {
 
 // ---------- ルーティング(ハッシュ方式: GitHub Pages でもそのまま動く) ----------
 function route() {
+  if (onList) listScroll.set(lastListKey, window.scrollY);
   disposeViewer?.();
   disposeViewer = null;
+  disposeToc?.();
+  disposeToc = null;
   const m = location.hash.match(/^#\/s\/([a-z0-9-]+)(?:\?pos=([a-z]+))?$/);
   const s = m && scenarios.find((x) => x.id === m[1]);
   // ハッシュなしで開いた時は、最後に開いた方のページ。#/ を直接開いた時はずかん
   if (!location.hash || location.hash === "#") history.replaceState(null, "", PAGES[readPage()].hash);
+  onList = !s;
   if (s) renderViewer(s, positionOf(m[2]));
   else if (location.hash === PAGES.practice.hash) renderPractice();
   else renderList();
-  window.scrollTo(0, 0);
+  // 一覧へ戻った時は見ていた所から(並びを切りかえて戻った時なども、その並びで見ていた所)
+  window.scrollTo(0, onList ? listScroll.get(lastListKey) ?? 0 : 0);
 }
 
 window.addEventListener("hashchange", route);
